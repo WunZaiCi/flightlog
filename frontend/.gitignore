@@ -45,3 +45,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# 构建时从 node_modules 复制（scripts/copy-maplibre-worker.mjs）
+/public/maplibre/

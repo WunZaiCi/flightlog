@@ -19,6 +19,11 @@
   --color-chart-grid: #e5e7eb;
   --color-surface: #ffffff; /* 图表表面色（段间空隙） */
 
+  /* 离线底图（Natural Earth）：浅色海洋和陆地，让航线（主蓝色）突出 */
+  --color-map-water: #dde8ef;
+  --color-map-land: #f6f5f1;
+  --color-map-coast: #c9d3da;
+
   /* Inter 自托管（@fontsource），中文回退到系统字体 */
   --font-sans:
     "Inter Variable", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",

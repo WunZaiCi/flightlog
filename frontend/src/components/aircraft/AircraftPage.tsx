@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { NewBadge } from "@/components/ui/NewBadge";
 import { Spinner } from "@/components/ui/Spinner";
@@ -147,7 +147,7 @@ export function AircraftPage() {
 }
 
 function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
-  const id = `aircraft-${title}`;
+  const id = useId();
   return (
     <section aria-labelledby={id}>
       <div className="mb-3">

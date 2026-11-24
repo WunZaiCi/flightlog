@@ -67,4 +67,43 @@ public final class StatsDtos {
   public record BodyShare(int narrow, int wide, int regional, int unknown) {}
 
   public record YearBodyCount(String year, int narrow, int wide, int regional, int unknown) {}
+
+  /** 航线地图。 */
+  public record RoutesResponse(
+      List<RouteStat> routes, List<AirportStat> airports, RouteTotals totals) {}
+
+  /** 一条航线（往返合并，from/to 按字母排序），按次数倒序。flights 按日期倒序。 */
+  public record RouteStat(
+      String from, String to, int count, int distanceKm, List<RouteFlight> flights) {}
+
+  public record RouteFlight(
+      long id,
+      LocalDate flightDate,
+      String flightNumber,
+      String depIata,
+      String arrIata,
+      String airlineName,
+      String aircraft) {}
+
+  /** 去过的机场；visits = 出发次数 + 到达次数。 */
+  public record AirportStat(
+      String iata,
+      String name,
+      String city,
+      String countryCode,
+      double lat,
+      double lon,
+      int visits,
+      int departures,
+      int arrivals) {}
+
+  public record RouteSummary(String from, String to, int distanceKm) {}
+
+  /** longest / shortest 在没有航班时为空。 */
+  public record RouteTotals(
+      int flightCount,
+      long totalDistanceKm,
+      int countryCount,
+      RouteSummary longest,
+      RouteSummary shortest) {}
 }

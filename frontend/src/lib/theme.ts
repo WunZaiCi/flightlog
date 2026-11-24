@@ -13,7 +13,10 @@ export type ThemeColor =
   | "body-regional"
   | "body-unknown"
   | "chart-grid"
-  | "surface";
+  | "surface"
+  | "map-water"
+  | "map-land"
+  | "map-coast";
 
 export function themeColor(name: ThemeColor): string {
   if (typeof window === "undefined") return "";

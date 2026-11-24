@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 构建时从 node_modules 复制的第三方文件
+    "public/maplibre/**",
   ]),
 ]);
 
