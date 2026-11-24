@@ -96,6 +96,19 @@ public class ReferenceRepository {
         .optional();
   }
 
+  /** 航班号用 ICAO 三字母航司代码时（如 ANA242），找对应的航司。 */
+  public Optional<AirlineResponse> findAirlineByIcao(String icao) {
+    return jdbc.sql(
+            """
+            SELECT iata, icao, name, country_code FROM airlines WHERE icao = :icao
+            ORDER BY CASE WHEN iata IS NOT NULL THEN 0 ELSE 1 END, id
+            LIMIT 1
+            """)
+        .param("icao", icao)
+        .query(ReferenceRepository::airline)
+        .optional();
+  }
+
   /** 按 ICAO 机型代码、型号、名称搜索，例如 787-9 匹配 B789。 */
   public List<AircraftTypeResponse> searchAircraftTypes(String query, int limit) {
     Like like = Like.of(query);

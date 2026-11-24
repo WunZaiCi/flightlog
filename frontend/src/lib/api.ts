@@ -10,6 +10,8 @@ export class ApiError extends Error {
     readonly status: number,
     message: string,
     readonly fieldErrors: FieldErrors = {},
+    /** ProblemDetail 里的其他字段，例如重复航班的 duplicateIds */
+    readonly extra: Record<string, unknown> = {},
   ) {
     super(message);
     this.name = "ApiError";
@@ -41,8 +43,8 @@ async function toApiError(response: Response): Promise<ApiError> {
   const type = response.headers.get("Content-Type") ?? "";
   if (type.includes("json")) {
     try {
-      const body = (await response.json()) as { detail?: string; errors?: FieldErrors };
-      return new ApiError(response.status, body.detail || fallbackMessage(response.status), body.errors ?? {});
+      const body = (await response.json()) as { detail?: string; errors?: FieldErrors } & Record<string, unknown>;
+      return new ApiError(response.status, body.detail || fallbackMessage(response.status), body.errors ?? {}, body);
     } catch {
       // 响应体不是合法 JSON，用默认提示
     }
