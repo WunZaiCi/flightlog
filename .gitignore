@@ -1,0 +1,29 @@
+# 密钥（只提交 .env.example）
+.env
+.env.*
+!.env.example
+
+# 数据库和备份（绝不提交）
+data/
+
+# 前端
+node_modules/
+frontend/out/
+frontend/.next/
+frontend/test-results/
+frontend/playwright-report/
+frontend/next-env.d.ts
+
+# 后端
+backend/target/
+
+# Claude Code 本地设置
+.claude/settings.local.json
+
+# 日志、编辑器、系统文件
+*.log
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
