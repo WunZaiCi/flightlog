@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/*
+ * 配色和字体统一定义在这里，组件里只用 bg-navy、text-primary 等类名，不写颜色值。
+ */
+@theme {
+  --color-accent: #ecad0a; /* 黄色：新解锁机型徽章、高亮 */
+  --color-primary: #209dd7; /* 主蓝色：主操作按钮、链接、地图航线 */
+  --color-secondary: #753991; /* 紫色：提交和保存按钮 */
+  --color-navy: #032147; /* 深海军蓝：标题、导航栏 */
+  --color-muted: #888888; /* 灰色：次要信息 */
+
+  /* Inter 自托管（@fontsource），中文回退到系统字体 */
+  --font-sans:
+    "Inter Variable", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    "Source Han Sans SC", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-white font-sans text-slate-900 antialiased;
+  }
+}
