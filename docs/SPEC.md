@@ -92,7 +92,7 @@ GET    /api/config     → { ai_enabled, lookup_enabled }
 - [ ] frontend Next.js 16 静态导出、Tailwind v4 主题配色、应用外壳（导航栏）
 - [x] SQLite JDBC + Flyway，数据库放在 `data/`，启动时自动迁移
 - [ ] Dockerfile（多阶段构建）、`compose.yaml`（挂载 `./data`，端口绑定 127.0.0.1）、各系统的启动和停止脚本
-- [ ] 测试：数据库重启后数据仍在
+- [x] 测试：数据库重启后数据仍在
 
 ### P2 用户
 - [ ] 注册、登录、登出（Cookie 会话），前端登录门禁
