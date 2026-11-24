@@ -51,20 +51,21 @@ public class ReferenceDataImporter implements ApplicationRunner {
   }
 
   public void importIfEmpty() {
-    importTableIfEmpty("airports", this::importAirports);
-    importTableIfEmpty("airlines", this::importAirlines);
-    importTableIfEmpty("aircraft_types", this::importAircraftTypes);
+    importTableIfEmpty("airports", "SELECT COUNT(*) FROM airports", this::importAirports);
+    importTableIfEmpty("airlines", "SELECT COUNT(*) FROM airlines", this::importAirlines);
+    importTableIfEmpty(
+        "aircraft_types", "SELECT COUNT(*) FROM aircraft_types", this::importAircraftTypes);
   }
 
-  private void importTableIfEmpty(String table, Consumer<JdbcClient> importer) {
-    // 表名是代码里的常量，不来自用户输入
-    long existing = jdbc.sql("SELECT COUNT(*) FROM " + table).query(Long.class).single();
+  /** countSql 是固定的整条 SQL（不拼接表名）。 */
+  private void importTableIfEmpty(String name, String countSql, Consumer<JdbcClient> importer) {
+    long existing = jdbc.sql(countSql).query(Long.class).single();
     if (existing > 0) {
       return;
     }
     transaction.executeWithoutResult(status -> importer.accept(jdbc));
-    long imported = jdbc.sql("SELECT COUNT(*) FROM " + table).query(Long.class).single();
-    log.info("已导入参考数据 {}：{} 条", table, imported);
+    long imported = jdbc.sql(countSql).query(Long.class).single();
+    log.info("已导入参考数据 {}：{} 条", name, imported);
   }
 
   private void importAirports(JdbcClient jdbc) {

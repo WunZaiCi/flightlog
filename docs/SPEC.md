@@ -10,7 +10,7 @@
 | `/flights/new` | 新增航班（三种方式在同一页切换，见下文「录入」） |
 | `/aircraft` | 机型统计 |
 | `/map` | 航线地图 |
-| `/settings` | CSV 导入导出、数据库备份说明、API key 状态（只显示有没有配置，不显示 key 本身） |
+| `/settings` | 账号信息、API key 状态（只显示有没有配置，不显示 key 本身） |
 
 ## 录入
 
@@ -48,7 +48,7 @@ SPRING_SESSION, SPRING_SESSION_ATTRIBUTES
 flights         id, user_id → users, flight_date, flight_number, airline_iata,
                 dep_iata → airports, arr_iata → airports,
                 aircraft_type_icao → aircraft_types (可为空), registration (可为空),
-                distance_km, notes, source ('manual'|'api'|'ai'|'csv'),
+                distance_km, notes, source ('manual'|'api'|'ai'；V4 迁移的约束里还允许 'csv'，不再使用),
                 created_at, updated_at
                 索引: (user_id, flight_date), (user_id, aircraft_type_icao)
 airports        iata (主键), icao, name, city, country_code, lat, lon, tz
@@ -78,7 +78,6 @@ GET    /api/stats/summary
 GET    /api/stats/aircraft
 GET    /api/stats/routes?year=&type=&airline=
 GET    /api/ref/airports?q=  |  /api/ref/aircraft-types?q=  |  /api/ref/airlines?q=
-GET    /api/export.csv  |  POST /api/import.csv（先预览，确认后写入）
 GET    /api/health
 GET    /api/config     → { ai_enabled, lookup_enabled }
 ```
