@@ -33,4 +33,38 @@ public final class StatsDtos {
       boolean recognized,
       LocalDate firstFlightDate,
       String firstFlightNumber) {}
+
+  /** 机型统计页。 */
+  public record AircraftStatsResponse(
+      List<AircraftTypeStat> types, BodyShare bodyShare, List<YearBodyCount> byYear) {}
+
+  /**
+   * 一个坐过的机型。未识别机型（不在机型表里）的 manufacturer、family、model、displayName、body 为空。
+   *
+   * @param isNew 首次乘坐在最近 90 天内（「新解锁」）
+   */
+  public record AircraftTypeStat(
+      String icaoCode,
+      String manufacturer,
+      String family,
+      String model,
+      String displayName,
+      String body,
+      boolean recognized,
+      int flightCount,
+      long distanceKm,
+      LocalDate firstFlightDate,
+      String firstFlightNumber,
+      boolean isNew,
+      List<AirlineCount> airlines,
+      List<RegistrationCount> registrations) {}
+
+  public record AirlineCount(String iata, String name, int count) {}
+
+  public record RegistrationCount(String registration, int count) {}
+
+  /** 按航班次数统计的机身类型；unknown 是没填机型或未识别机型。 */
+  public record BodyShare(int narrow, int wide, int regional, int unknown) {}
+
+  public record YearBodyCount(String year, int narrow, int wide, int regional, int unknown) {}
 }
