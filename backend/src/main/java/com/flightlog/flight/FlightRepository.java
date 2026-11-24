@@ -106,9 +106,38 @@ public class FlightRepository {
         .optional();
   }
 
-  public List<FlightResponse> list(long userId) {
-    return jdbc.sql(SELECT + " WHERE f.user_id = :userId ORDER BY f.flight_date DESC, f.id DESC")
+  /** 当前用户的航班，按日期倒序。筛选条件为空的项不生效（SQL 固定，参数绑定，不拼接字符串）。 */
+  public List<FlightResponse> list(long userId, FlightFilter filter) {
+    // LIKE 用 ! 作转义符，让用户输入的 % 和 _ 按普通字符匹配
+    String like =
+        filter.query() == null
+            ? null
+            : "%" + filter.query().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+    return jdbc.sql(
+            SELECT
+                + """
+                WHERE f.user_id = :userId
+                  AND (:year IS NULL OR substr(f.flight_date, 1, 4) = :year)
+                  AND (:airline IS NULL OR f.airline_iata = :airline)
+                  AND (:type IS NULL OR f.aircraft_type_icao = :type)
+                  AND (:airport IS NULL OR f.dep_iata = :airport OR f.arr_iata = :airport)
+                  AND (:like IS NULL
+                       OR f.flight_number LIKE :like ESCAPE '!' OR f.registration LIKE :like ESCAPE '!'
+                       OR f.notes LIKE :like ESCAPE '!'
+                       OR f.dep_iata LIKE :like ESCAPE '!' OR f.arr_iata LIKE :like ESCAPE '!'
+                       OR d.city LIKE :like ESCAPE '!' OR a.city LIKE :like ESCAPE '!'
+                       OR d.name LIKE :like ESCAPE '!' OR a.name LIKE :like ESCAPE '!'
+                       OR t.display_name LIKE :like ESCAPE '!'
+                       OR f.aircraft_type_icao LIKE :like ESCAPE '!'
+                       OR airline_name LIKE :like ESCAPE '!')
+                ORDER BY f.flight_date DESC, f.id DESC
+                """)
         .param("userId", userId)
+        .param("year", filter.year())
+        .param("airline", filter.airline())
+        .param("type", filter.type())
+        .param("airport", filter.airport())
+        .param("like", like)
         .query(FlightRepository::map)
         .list();
   }

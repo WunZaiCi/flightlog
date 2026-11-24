@@ -2,12 +2,19 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
+import { toQueryString, type FlightFilters } from "./flight-filters";
 import type { Flight, FlightInput } from "./types";
 
 export const FLIGHTS_KEY = ["flights"] as const;
 
-export function useFlights() {
-  return useQuery({ queryKey: [...FLIGHTS_KEY, "list"], queryFn: () => api.get<Flight[]>("/api/flights") });
+/** 当前用户的航班（可带筛选条件）。 */
+export function useFlights(filters: FlightFilters = {}) {
+  const qs = toQueryString(filters);
+  return useQuery({
+    queryKey: [...FLIGHTS_KEY, "list", qs],
+    queryFn: () => api.get<Flight[]>(qs ? `/api/flights?${qs}` : "/api/flights"),
+    placeholderData: (previous) => previous,
+  });
 }
 
 export function useFlight(id: number | null) {

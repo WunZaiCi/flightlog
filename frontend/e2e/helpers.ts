@@ -18,3 +18,17 @@ export async function signUp(page: Page, displayName = "测试用户") {
   expect(response.status()).toBe(201);
   return { email, password: PASSWORD, displayName };
 }
+
+/** 通过 API 新增航班（需要先 signUp）。 */
+export async function createFlight(
+  page: Page,
+  flight: { flightDate: string; flightNumber: string; depIata: string; arrIata: string; aircraftType?: string; registration?: string },
+) {
+  const csrf = (await page.context().cookies()).find((c) => c.name === "XSRF-TOKEN")?.value;
+  const response = await page.request.post("/api/flights", {
+    data: { ...flight, allowDuplicate: true },
+    headers: { "X-XSRF-TOKEN": csrf ?? "" },
+  });
+  expect(response.status()).toBe(201);
+  return (await response.json()) as { id: number };
+}

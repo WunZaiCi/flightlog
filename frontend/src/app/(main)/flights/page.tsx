@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { FlightsPage } from "@/components/flights/FlightsPage";
 
@@ -10,7 +11,7 @@ export default function Page() {
     <>
       <PageHeader
         title="航班"
-        description="按日期倒序"
+        description="按日期倒序，可筛选和搜索"
         actions={
           <Link
             href="/flights/new"
@@ -20,7 +21,9 @@ export default function Page() {
           </Link>
         }
       />
-      <FlightsPage />
+      <Suspense>
+        <FlightsPage />
+      </Suspense>
     </>
   );
 }

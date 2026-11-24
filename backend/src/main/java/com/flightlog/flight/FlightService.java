@@ -30,8 +30,8 @@ public class FlightService {
     this.reference = reference;
   }
 
-  public List<FlightResponse> list(long userId) {
-    return flights.list(userId);
+  public List<FlightResponse> list(long userId, FlightFilter filter) {
+    return flights.list(userId, filter);
   }
 
   public FlightResponse get(long userId, long id) {

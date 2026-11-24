@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,8 +30,14 @@ public class FlightController {
   }
 
   @GetMapping
-  public List<FlightResponse> list(@AuthenticationPrincipal AppUserPrincipal user) {
-    return flightService.list(user.id());
+  public List<FlightResponse> list(
+      @AuthenticationPrincipal AppUserPrincipal user,
+      @RequestParam(required = false) String year,
+      @RequestParam(required = false) String airline,
+      @RequestParam(required = false) String type,
+      @RequestParam(required = false) String airport,
+      @RequestParam(required = false) String q) {
+    return flightService.list(user.id(), FlightFilter.of(year, airline, type, airport, q));
   }
 
   @PostMapping
