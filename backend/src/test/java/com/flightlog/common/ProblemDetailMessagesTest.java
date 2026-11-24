@@ -2,6 +2,7 @@ package com.flightlog.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.flightlog.SqliteTestSupport;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +14,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 /** messages.properties 里的中文 ProblemDetail 文案要真正生效（防止改名或编码问题后悄悄退回英文）。 */
 @SpringBootTest
 @AutoConfigureMockMvc
-class ProblemDetailMessagesTest {
+class ProblemDetailMessagesTest extends SqliteTestSupport {
 
   private final MockMvcTester mvc;
 

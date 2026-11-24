@@ -2,6 +2,7 @@ package com.flightlog.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.flightlog.SqliteTestSupport;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +20,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
  */
 @SpringBootTest(properties = "spring.web.resources.static-locations=classpath:/test-static/")
 @AutoConfigureMockMvc
-class SpaFallbackTest {
+class SpaFallbackTest extends SqliteTestSupport {
 
   private final MockMvcTester mvc;
 

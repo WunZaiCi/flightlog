@@ -2,6 +2,7 @@ package com.flightlog.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.flightlog.SqliteTestSupport;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,7 +12,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class HealthControllerTest {
+class HealthControllerTest extends SqliteTestSupport {
 
   private final MockMvcTester mvc;
 
@@ -25,7 +26,6 @@ class HealthControllerTest {
         .hasStatusOk()
         .hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
         .bodyJson()
-        .extractingPath("$.status")
-        .isEqualTo("ok");
+        .isLenientlyEqualTo("{\"status\":\"ok\",\"database\":\"ok\"}");
   }
 }

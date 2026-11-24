@@ -1,5 +1,7 @@
 package com.flightlog.common;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,7 +17,9 @@ public class HealthController {
   }
 
   @GetMapping
-  public HealthResponse health() {
-    return healthService.check();
+  public ResponseEntity<HealthResponse> health() {
+    HealthResponse response = healthService.check();
+    HttpStatus status = response.healthy() ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
+    return ResponseEntity.status(status).body(response);
   }
 }
