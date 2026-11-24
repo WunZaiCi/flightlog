@@ -46,8 +46,8 @@ docs/                               SPEC.md 等文档
 ```powershell
 # 后端（在 backend/ 下，Windows 用 .\mvnw.cmd，Mac/Linux 用 ./mvnw）
 .\mvnw.cmd spring-boot:run          # 开发服务器 http://localhost:8000（自动读取根目录 .env）
-.\mvnw.cmd test                     # 单元测试和接口测试
-.\mvnw.cmd verify                   # 测试 + 格式检查（Spotless）+ 打包
+.\mvnw.cmd -q test                  # 单元测试和接口测试（-q 只输出错误）
+.\mvnw.cmd -q verify                # 测试 + 格式检查（Spotless）+ 打包
 .\mvnw.cmd spotless:apply           # 自动格式化代码
 
 # 前端（在 frontend/ 下）
@@ -139,20 +139,27 @@ scripts/unshare-tailscale.ps1  # 停止分享（tailscale serve reset）
 
 ## 开发流程
 
-实现一个功能时：
+### 每个条目（SPEC.md 里的一行）
 1. 在 `docs/SPEC.md` 里找到对应条目；规格不清楚就先问我，不要自己猜。
 2. 先简要说明实现方案，再写代码。
 3. **先写测试再写实现**：
    - 后端：JUnit 5 + AssertJ 写单元测试；`@SpringBootTest` + MockMvc 写接口测试（用临时目录里的 SQLite 文件，跑真实的 Flyway 迁移）。
    - 前端：Vitest + Testing Library。
-   - 主要流程（注册登录、录入航班、看统计）用 Playwright 写端到端测试，同时跑桌面和手机（390px）两种视口。
-4. 跑通全部检查：`mvnw verify`、前端测试、lint、类型检查、`npm run build`。有失败就修，不允许跳过测试、加 `@Disabled` 或删掉测试来让检查通过。
-5. 涉及界面的改动，启动开发服务器，在浏览器里实际看一遍（桌面和手机宽度都要看）。
-6. **代码审查**：调用 `code-reviewer` 子代理审查本次改动。必须修的问题修完后重新跑第 4 步；建议类问题列出来给我决定。
-7. 在 `docs/SPEC.md` 里把完成的条目勾上 `[x]`。
-8. git commit（Conventional Commits 格式，如 `feat: 机型统计页`），然后 `git push` 到 GitHub 私有仓库的 `main` 分支。不开 PR。
-   - 推送前确认 `.env`、`data/` 没有被暂存。
+4. 只跑**和本次改动相关**的测试（例如 `mvnw -q test -Dtest=FlightServiceTest`、`npx vitest run <文件>`），通过后在 `docs/SPEC.md` 勾上 `[x]`，然后 git commit（Conventional Commits 格式，如 `feat: 机型统计页`）。条目级别不推送、不审查、不开浏览器。
+
+### 每个阶段（P1、P2……）全部条目完成后
+5. 跑一次全部检查：`mvnw -q verify`、前端测试、lint、类型检查、`npm run build`。主要流程（注册登录、录入航班、看统计）的 Playwright 端到端测试也在这时跑，覆盖桌面和手机（390px）两种视口。有失败就修，不允许跳过测试、加 `@Disabled` 或删掉测试来让检查通过。
+6. 涉及界面的阶段，启动开发服务器，在浏览器里看一遍（桌面和手机宽度各一次）。
+7. **代码审查**：调用一次 `code-reviewer` 子代理，审查范围是本阶段的全部改动（`git diff <阶段开始前的提交>..HEAD`）。必须修的问题修完后重新跑第 5 步；建议类问题列出来给我决定。
+8. `git push` 到 GitHub 私有仓库的 `main` 分支。不开 PR。
+   - 推送前确认 `.env`、`data/` 没有被跟踪。
    - 第一次推送时如果还没有远程仓库，用 `gh repo create flightlog --private --source=. --push` 创建。
+
+### 节省 token
+- 命令输出要精简：Maven 一律加 `-q`；测试只看失败部分（Vitest 用 `--reporter=dot`，Playwright 用 `--reporter=line`）；长日志用 `Select-String` / `grep` 或只看最后几十行，不要把整份日志读进上下文。
+- 不要读取 `node_modules/`、`target/`、`out/`、`.next/`、`package-lock.json`、`data/` 和参考数据的原始 CSV（需要时只看前几行）。
+- 只打开和当前任务相关的文件；找代码先用搜索，不要通读整个目录。
+- 用浏览器检查时，优先读页面文字；只有检查布局和样式时才截图。
 
 ## 注意事项
 

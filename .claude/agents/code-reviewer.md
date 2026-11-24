@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 审查本次未推送的代码改动。每完成 SPEC.md 中的一个条目、在 commit 之前调用。只读，不修改代码。
+description: 审查一个开发阶段（P1、P2……）的全部改动。每个阶段的所有条目完成后、push 之前调用一次。只读，不修改代码。
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -8,7 +8,8 @@ tools: Read, Grep, Glob, Bash
 
 ## 做法
 
-1. 用 `git diff` 和 `git status` 查看本次改动（包括未暂存的改动和新文件）。
+1. 用 `git diff --stat <阶段开始前的提交>..HEAD` 先看改了哪些文件，再按文件逐个查看 diff；用 `git status` 确认有没有未提交的改动。调用方没有给出起点提交时，用 `git log --oneline origin/main..HEAD` 找出本阶段的提交。
+   - 节省 token：只看 diff 和必要的上下文，不要通读整个项目；跑测试时 Maven 加 `-q`，只看失败部分。
 2. 阅读 `CLAUDE.md` 和 `docs/SPEC.md` 中的相关条目，对照检查。
 3. 必要时阅读相关的已有代码，确认改动和项目整体一致。
 4. 可以运行测试和 lint 来验证，但**不要修改任何文件**。
