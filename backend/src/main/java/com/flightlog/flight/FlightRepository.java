@@ -142,6 +142,17 @@ public class FlightRepository {
         .list();
   }
 
+  /** 最近的几次航班（按日期倒序）。 */
+  public List<FlightResponse> recent(long userId, int limit) {
+    return jdbc.sql(
+            SELECT
+                + " WHERE f.user_id = :userId ORDER BY f.flight_date DESC, f.id DESC LIMIT :limit")
+        .param("userId", userId)
+        .param("limit", limit)
+        .query(FlightRepository::map)
+        .list();
+  }
+
   /** 同一用户、同一天、同一航班号的其他航班。 */
   public List<Long> findDuplicateIds(
       long userId, LocalDate date, String flightNumber, Long excludeId) {
