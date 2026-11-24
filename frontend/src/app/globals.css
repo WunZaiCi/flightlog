@@ -17,6 +17,7 @@
   --color-body-regional: #1baf7a;
   --color-body-unknown: #a3a3a3;
   --color-chart-grid: #e5e7eb;
+  --color-surface: #ffffff; /* 图表表面色（段间空隙） */
 
   /* Inter 自托管（@fontsource），中文回退到系统字体 */
   --font-sans:

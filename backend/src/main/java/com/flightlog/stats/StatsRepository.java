@@ -182,16 +182,16 @@ public class StatsRepository {
   public List<YearBody> bodyByYear(long userId) {
     return jdbc.sql(
             """
-            SELECT substr(f.flight_date, 1, 4) AS yr, COALESCE(t.body, 'unknown') AS body, COUNT(*) AS cnt
+            SELECT substr(f.flight_date, 1, 4) AS yr, COALESCE(t.body, 'unknown') AS body_key, COUNT(*) AS cnt
             FROM flights f
             LEFT JOIN aircraft_types t ON t.icao_code = f.aircraft_type_icao
             WHERE f.user_id = :userId
-            GROUP BY yr, body
+            GROUP BY yr, body_key
             ORDER BY yr
             """)
         .param("userId", userId)
         .query((rs, rowNum) ->
-            new YearBody(rs.getString("yr"), rs.getString("body"), rs.getInt("cnt")))
+            new YearBody(rs.getString("yr"), rs.getString("body_key"), rs.getInt("cnt")))
         .list();
   }
 }

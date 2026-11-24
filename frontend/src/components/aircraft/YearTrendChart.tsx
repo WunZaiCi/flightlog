@@ -11,7 +11,7 @@ export function YearTrendChart({ byYear }: { byYear: AircraftStats["byYear"] }) 
   const keys = BODY_KEYS.filter((k) => byYear.some((y) => y[k] > 0));
 
   const option = useMemo(() => {
-    const surface = "#ffffff";
+    const surface = themeColor("surface");
     const muted = themeColor("muted");
     return {
       animation: false,

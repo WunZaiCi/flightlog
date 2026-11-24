@@ -12,7 +12,8 @@ export type ThemeColor =
   | "body-wide"
   | "body-regional"
   | "body-unknown"
-  | "chart-grid";
+  | "chart-grid"
+  | "surface";
 
 export function themeColor(name: ThemeColor): string {
   if (typeof window === "undefined") return "";
