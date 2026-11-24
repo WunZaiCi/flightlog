@@ -1,0 +1,16 @@
+# 密钥和数据绝不进入镜像
+.env
+.env.*
+data/
+
+.git/
+.claude/
+**/node_modules/
+frontend/out/
+frontend/.next/
+frontend/test-results/
+frontend/playwright-report/
+backend/target/
+scripts/
+docs/
+*.md

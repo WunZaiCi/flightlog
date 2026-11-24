@@ -1,0 +1,21 @@
+services:
+  flightlog:
+    build:
+      context: .
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
+    image: flightlog:latest
+    container_name: flightlog
+    ports:
+      # 只绑定本机。不要改成 0.0.0.0；手机通过 Tailscale serve 访问
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # SQLite 数据库持久化在项目的 data/ 目录
+      - ./data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    # Linux 上由启动脚本传入当前用户的 UID/GID，保证能写挂载的 data/
+    user: "${FLIGHTLOG_UID:-10001}:${FLIGHTLOG_GID:-10001}"
+    restart: unless-stopped
+    stop_grace_period: 30s
