@@ -1,6 +1,7 @@
 package com.flightlog.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 import com.flightlog.SqliteTestSupport;
 import org.junit.jupiter.api.Test;
@@ -71,7 +72,7 @@ class SpaFallbackTest extends SqliteTestSupport {
 
   @Test
   void unknownApiPathReturnsProblemDetailInChinese() {
-    assertThat(mvc.get().uri("/api/nope"))
+    assertThat(mvc.get().uri("/api/nope").with(user("tester")))
         .hasStatus(HttpStatus.NOT_FOUND)
         .hasContentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
         .bodyJson()
@@ -81,7 +82,7 @@ class SpaFallbackTest extends SqliteTestSupport {
 
   @Test
   void apiRootIsNotFallback() {
-    assertThat(mvc.get().uri("/api")).hasStatus(HttpStatus.NOT_FOUND);
+    assertThat(mvc.get().uri("/api").with(user("tester"))).hasStatus(HttpStatus.NOT_FOUND);
   }
 
   @Test

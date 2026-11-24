@@ -1,6 +1,8 @@
 package com.flightlog.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 import com.flightlog.SqliteTestSupport;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ class ProblemDetailMessagesTest extends SqliteTestSupport {
 
   @Test
   void methodNotAllowedIsChinese() {
-    var result = mvc.post().uri("/api/health").exchange();
+    var result = mvc.post().uri("/api/health").with(user("tester")).with(csrf()).exchange();
     assertThat(result)
         .hasStatus(HttpStatus.METHOD_NOT_ALLOWED)
         .hasContentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
@@ -34,7 +36,7 @@ class ProblemDetailMessagesTest extends SqliteTestSupport {
 
   @Test
   void notFoundTitleIsChinese() {
-    var result = mvc.get().uri("/api/nope").exchange();
+    var result = mvc.get().uri("/api/nope").with(user("tester")).exchange();
     assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
     assertThat(result).bodyJson().extractingPath("$.title").isEqualTo("资源不存在");
     assertThat(result).bodyJson().extractingPath("$.detail").isEqualTo("接口不存在");

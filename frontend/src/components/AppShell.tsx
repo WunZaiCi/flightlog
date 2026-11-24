@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { UserMenu } from "./auth/UserMenu";
 import { Icon } from "./Icon";
 import { NAV_ITEMS, activeNavHref } from "./nav-items";
 
@@ -44,6 +45,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               })}
             </ul>
           </nav>
+
+          <div className="hidden md:block">
+            <UserMenu />
+          </div>
 
           <Link
             href="/settings"

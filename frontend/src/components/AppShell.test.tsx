@@ -4,6 +4,7 @@ import { AppShell } from "./AppShell";
 
 const pathname = vi.hoisted(() => ({ current: "/" }));
 vi.mock("next/navigation", () => ({ usePathname: () => pathname.current }));
+vi.mock("./auth/UserMenu", () => ({ UserMenu: () => null }));
 
 describe("AppShell", () => {
   beforeEach(() => {

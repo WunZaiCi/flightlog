@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { signUp } from "./helpers";
+
+test.beforeEach(async ({ page }) => {
+  await signUp(page);
+});
 
 test.describe("应用外壳", () => {
   test("首页显示标题和导航", async ({ page, isMobile }) => {
