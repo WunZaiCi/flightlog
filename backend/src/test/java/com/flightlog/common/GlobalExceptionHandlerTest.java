@@ -15,6 +15,7 @@ class GlobalExceptionHandlerTest {
     ProblemDetail problem = handler.handleUnexpected(new IllegalStateException("secret-internal"));
 
     assertThat(problem.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    assertThat(problem.getTitle()).isEqualTo("服务器错误");
     assertThat(problem.getDetail()).isEqualTo("服务器内部错误，请稍后再试");
     assertThat(problem.toString()).doesNotContain("secret-internal");
   }

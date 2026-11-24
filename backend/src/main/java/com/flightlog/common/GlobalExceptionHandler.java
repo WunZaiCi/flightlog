@@ -29,13 +29,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     String path = ex.getResourcePath().replaceFirst("^/+", "");
     boolean isApi = path.equals("api") || path.startsWith("api/");
     ex.getBody().setDetail(isApi ? "接口不存在" : "请求的资源不存在");
-    return handleExceptionInternal(ex, ex.getBody(), headers, status, request);
+    // body 传 null，让父类再从 messages.properties 解析中文 title（已设置的 detail 会保留）
+    return handleExceptionInternal(ex, null, headers, status, request);
   }
 
   /** 兜底：未预料的异常只记日志，不把内部信息返回给客户端。 */
   @ExceptionHandler(Exception.class)
   public ProblemDetail handleUnexpected(Exception ex) {
     log.error("未处理的异常", ex);
-    return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "服务器内部错误，请稍后再试");
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "服务器内部错误，请稍后再试");
+    problem.setTitle("服务器错误");
+    return problem;
   }
 }
