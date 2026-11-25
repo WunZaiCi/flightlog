@@ -58,6 +58,13 @@ public class UserRepository {
     return new UserAccount(id, email, passwordHash, displayName, now);
   }
 
+  public void updatePasswordHash(long id, String passwordHash) {
+    jdbc.sql("UPDATE users SET password_hash = :passwordHash WHERE id = :id")
+        .param("passwordHash", passwordHash)
+        .param("id", id)
+        .update();
+  }
+
   private static UserAccount map(ResultSet rs, int rowNum) throws SQLException {
     return new UserAccount(
         rs.getLong("id"),

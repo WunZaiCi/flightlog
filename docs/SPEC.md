@@ -10,7 +10,7 @@
 | `/flights/new` | 新增航班（三种方式在同一页切换，见下文「录入」） |
 | `/aircraft` | 机型统计 |
 | `/map` | 航线地图 |
-| `/settings` | 账号信息、API key 状态（只显示有没有配置，不显示 key 本身） |
+| `/settings` | 账号信息、修改密码、API key 状态（只显示有没有配置，不显示 key 本身） |
 
 ## 录入
 
@@ -69,6 +69,7 @@ api_cache       key (主键, 如 'aerodatabox:NH242:2026-11-03'), response_json,
 ```
 POST   /api/auth/register | /api/auth/login | /api/auth/logout
 GET    /api/auth/me
+POST   /api/auth/password   { currentPassword, newPassword } → 204，其他设备上的登录失效
 GET    /api/flights?year=&airline=&type=&airport=&q=
 POST   /api/flights
 GET    /api/flights/{id}  |  PUT /api/flights/{id}  |  DELETE /api/flights/{id}
@@ -121,6 +122,9 @@ GET    /api/config     → { aiEnabled, lookupEnabled }
 - [x] HTTPS 下 Cookie 加 Secure、登录频率限制
 - [x] 所有页面在手机宽度下检查一遍（底部标签栏、表单、地图）
 - [x] PWA：加 manifest 和图标，可以“添加到主屏幕”
+
+### P9 账号
+- [x] 修改密码（设置页）：验证当前密码，新密码规则和注册相同；改完后其他设备上的登录失效，当前设备保持登录；当前密码输错计入登录频率限制
 
 ### 以后可以考虑
 - 年度回顾页（类似“年度报告”）

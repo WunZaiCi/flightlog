@@ -31,6 +31,11 @@ public final class AuthDtos {
     }
   }
 
+  public record ChangePasswordRequest(
+      @NotBlank(message = "请填写当前密码") @Size(max = 64, message = "密码太长") String currentPassword,
+      @NotBlank(message = "请填写新密码") @Size(min = 8, max = 64, message = "密码长度为 8 到 64 个字符")
+          String newPassword) {}
+
   public record UserResponse(long id, String email, String displayName) {
 
     static UserResponse of(UserAccount user) {

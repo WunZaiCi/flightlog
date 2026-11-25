@@ -1,5 +1,6 @@
 package com.flightlog.auth;
 
+import com.flightlog.auth.AuthDtos.ChangePasswordRequest;
 import com.flightlog.auth.AuthDtos.LoginRequest;
 import com.flightlog.auth.AuthDtos.RegisterRequest;
 import com.flightlog.auth.AuthDtos.UserResponse;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 注册、登录、当前用户。登出由 Spring Security 处理（POST /api/auth/logout）。 */
+/** 注册、登录、当前用户、修改密码。登出由 Spring Security 处理（POST /api/auth/logout）。 */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -47,6 +48,16 @@ public class AuthController {
     AppUserPrincipal principal =
         loginSessionService.login(body.email(), body.password(), request, response);
     return UserResponse.of(authService.currentUser(principal.id()));
+  }
+
+  @PostMapping("/password")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void changePassword(
+      @AuthenticationPrincipal AppUserPrincipal principal,
+      @Valid @RequestBody ChangePasswordRequest body,
+      HttpServletRequest request) {
+    UserAccount user = authService.changePassword(principal.id(), body, request.getRemoteAddr());
+    loginSessionService.logoutOtherSessions(user.email(), request);
   }
 
   @GetMapping("/me")

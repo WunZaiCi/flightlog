@@ -62,3 +62,11 @@ export function useLogout() {
     },
   });
 }
+
+/** 修改密码。成功后当前设备保持登录，其他设备上的登录失效。 */
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (input: { currentPassword: string; newPassword: string }) =>
+      api.post<void>("/api/auth/password", input),
+  });
+}
