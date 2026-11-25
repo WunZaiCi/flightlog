@@ -19,6 +19,8 @@
 		<!-- 插件不在 Spring Boot BOM 里，需要显式写版本 -->
 		<spotless.version>3.11.0</spotless.version>
 		<google-java-format.version>2.0.0</google-java-format.version>
+		<!-- WireMock 不在 Spring Boot BOM 里；4.x 仍是 beta，用稳定的 3.x -->
+		<wiremock.version>3.13.2</wiremock.version>
 		<!-- 前端静态导出目录，打包时复制进 jar 的 static/ -->
 		<frontend.out.dir>${project.basedir}/../frontend/out</frontend.out.dir>
 	</properties>
@@ -67,6 +69,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<!-- 测试中模拟 AeroDataBox，禁止真实调用外部 API -->
+			<groupId>org.wiremock</groupId>
+			<artifactId>wiremock-standalone</artifactId>
+			<version>${wiremock.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

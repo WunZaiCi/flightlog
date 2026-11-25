@@ -79,7 +79,7 @@ GET    /api/stats/aircraft
 GET    /api/stats/routes?year=&type=&airline=
 GET    /api/ref/airports?q=  |  /api/ref/aircraft-types?q=  |  /api/ref/airlines?q=
 GET    /api/health
-GET    /api/config     → { ai_enabled, lookup_enabled }
+GET    /api/config     → { aiEnabled, lookupEnabled }
 ```
 
 ## 开发阶段
@@ -110,7 +110,7 @@ GET    /api/config     → { ai_enabled, lookup_enabled }
 - [x] OpenFreeMap 底图（离线时自动切换）、大圆弧线、按次数显示粗细、筛选、点击查看详情
 
 ### P6 航班号自动查询
-- [ ] AeroDataBox 接入、缓存、额度用完和查不到时的提示
+- [x] AeroDataBox 接入、缓存、额度用完和查不到时的提示
 
 ### P7 AI 解析录入
 - [ ] Gemini 结构化输出解析文字、解析多段航程、逐条确认

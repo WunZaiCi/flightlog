@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Combobox } from "@/components/ui/Combobox";
 import { Field } from "@/components/ui/Field";
 import { ApiError } from "@/lib/api";
+import { todayLocal } from "@/lib/dates";
 import { useCreateFlight } from "@/lib/flights";
 import { airportLabel, searchAircraftTypes, searchAirports } from "@/lib/reference";
 import type { AircraftType, Airport, FlightInput, FlightSource } from "@/lib/types";
@@ -21,18 +22,12 @@ type FlightFormProps = {
   source?: FlightSource;
 };
 
-function today() {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 10);
-}
-
 /** 新增和编辑航班共用的表单。AI 和 API 的结果也只是预填这个表单，用户确认后才保存。 */
 export function FlightForm({ initial, submit, onSaved, onCancel, source = "manual" }: FlightFormProps) {
   const create = useCreateFlight();
   const save = submit ?? create.mutateAsync;
 
-  const [flightDate, setFlightDate] = useState(initial?.flightDate ?? today());
+  const [flightDate, setFlightDate] = useState(initial?.flightDate ?? todayLocal());
   const [flightNumber, setFlightNumber] = useState(initial?.flightNumber ?? "");
   const [depIata, setDepIata] = useState(initial?.depIata ?? "");
   const [arrIata, setArrIata] = useState(initial?.arrIata ?? "");

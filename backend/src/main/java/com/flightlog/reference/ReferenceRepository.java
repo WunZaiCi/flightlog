@@ -83,19 +83,6 @@ public class ReferenceRepository {
         .list();
   }
 
-  /** 航班号前缀（IATA 两位码）对应的航司，取同时有 IATA 和 ICAO 代码的那条。 */
-  public Optional<AirlineResponse> findAirlineByIata(String iata) {
-    return jdbc.sql(
-            """
-            SELECT iata, icao, name, country_code FROM airlines WHERE iata = :iata
-            ORDER BY CASE WHEN icao IS NOT NULL THEN 0 ELSE 1 END, id
-            LIMIT 1
-            """)
-        .param("iata", iata)
-        .query(ReferenceRepository::airline)
-        .optional();
-  }
-
   /** 航班号用 ICAO 三字母航司代码时（如 ANA242），找对应的航司。 */
   public Optional<AirlineResponse> findAirlineByIcao(String icao) {
     return jdbc.sql(
@@ -137,15 +124,30 @@ public class ReferenceRepository {
         .list();
   }
 
-  public Optional<AircraftTypeResponse> findAircraftType(String icaoCode) {
-    return jdbc.sql(
-            """
-            SELECT icao_code, manufacturer, family, model, display_name, body FROM aircraft_types
-            WHERE icao_code = :icao
-            """)
-        .param("icao", icaoCode)
-        .query(ReferenceRepository::aircraftType)
-        .optional();
+  /** 按机型名称找 ICAO 代码（外部 API 返回的是「Boeing 787-9」这样的名称）。 忽略大小写、空格和标点比较：显示名、制造商 + 型号、型号三种写法。 */
+  public Optional<String> findAircraftTypeIcaoByName(String name) {
+    String wanted = normalizeName(name);
+    if (wanted.isEmpty()) {
+      return Optional.empty();
+    }
+    return jdbc
+        .sql("SELECT icao_code, manufacturer, model, display_name FROM aircraft_types")
+        .query((rs, rowNum) ->
+            new String[] {
+              rs.getString("icao_code"),
+              normalizeName(rs.getString("display_name")),
+              normalizeName(rs.getString("manufacturer") + rs.getString("model")),
+              normalizeName(rs.getString("model"))
+            })
+        .list()
+        .stream()
+        .filter(t -> wanted.equals(t[1]) || wanted.equals(t[2]) || wanted.equals(t[3]))
+        .map(t -> t[0])
+        .findFirst();
+  }
+
+  private static String normalizeName(String s) {
+    return s == null ? "" : s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
   }
 
   private static AirportResponse airport(ResultSet rs, int rowNum) throws SQLException {

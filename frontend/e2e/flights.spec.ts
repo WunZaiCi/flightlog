@@ -96,3 +96,17 @@ test("按年份、机场筛选和搜索航班", async ({ page, isMobile }) => {
   await expect(flights).toHaveCount(1);
   await expect(flights).toContainText("MU5101");
 });
+
+test("没有配置 key 时，航班号查询和 AI 解析显示不可用，设置页显示状态", async ({ page }) => {
+  await signUp(page);
+  await page.goto("/flights/new");
+  await page.getByRole("tab", { name: "航班号查询" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("没有配置 AeroDataBox API key");
+  await page.getByRole("tab", { name: "AI 解析" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("没有配置 Gemini API key");
+
+  await page.goto("/settings");
+  const status = page.getByRole("region", { name: "API key 状态" });
+  await expect(status).toContainText("未配置（功能已禁用）");
+  await expect(status).not.toContainText("已配置");
+});
