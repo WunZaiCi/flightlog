@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     template: "%s · FlightLog",
   },
   description: "记录坐过的航班，统计机型，画出飞过的航线",
+  applicationName: "FlightLog",
+  // iOS「添加到主屏幕」后全屏打开（页面已经处理了刘海和底部安全区）
+  appleWebApp: { capable: true, title: "FlightLog", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {

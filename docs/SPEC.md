@@ -120,7 +120,7 @@ GET    /api/config     → { aiEnabled, lookupEnabled }
 - [x] `share-tailscale.ps1` / `unshare-tailscale.ps1` 脚本
 - [x] HTTPS 下 Cookie 加 Secure、登录频率限制
 - [ ] 所有页面在手机宽度下检查一遍（底部标签栏、表单、地图）
-- [ ] PWA：加 manifest 和图标，可以“添加到主屏幕”
+- [x] PWA：加 manifest 和图标，可以“添加到主屏幕”
 
 ### 以后可以考虑
 - 年度回顾页（类似“年度报告”）
