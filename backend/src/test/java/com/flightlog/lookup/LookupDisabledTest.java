@@ -32,6 +32,19 @@ class LookupDisabledTest extends SqliteTestSupport {
   }
 
   @Test
+  void aiParseReturnsServiceUnavailable() {
+    SessionClient user = new SessionClient(mvc);
+    user.register("ai" + System.nanoTime() + "@example.com", "correct-horse-1", null);
+
+    MvcTestResult result = user.postJson("/api/ai/parse", "{\"text\":\"NH242\"}");
+    assertThat(result).hasStatus(HttpStatus.SERVICE_UNAVAILABLE);
+    assertThat(result)
+        .bodyJson()
+        .extractingPath("$.detail")
+        .isEqualTo("没有配置 Gemini API key，AI 解析不可用，请手动填写");
+  }
+
+  @Test
   void lookupReturnsServiceUnavailable() {
     SessionClient user = new SessionClient(mvc);
     user.register("d" + System.nanoTime() + "@example.com", "correct-horse-1", null);

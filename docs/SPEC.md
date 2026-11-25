@@ -113,8 +113,8 @@ GET    /api/config     → { aiEnabled, lookupEnabled }
 - [x] AeroDataBox 接入、缓存、额度用完和查不到时的提示
 
 ### P7 AI 解析录入
-- [ ] Gemini 结构化输出解析文字、解析多段航程、逐条确认
-- [ ] 登机牌和电子客票截图识别
+- [x] Gemini 结构化输出解析文字、解析多段航程、逐条确认
+- [x] 登机牌和电子客票截图识别
 
 ### P8 手机远程访问
 - [ ] `share-tailscale.ps1` / `unshare-tailscale.ps1` 脚本

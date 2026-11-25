@@ -2,10 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState, type KeyboardEvent } from "react";
+import { Button } from "@/components/ui/Button";
+import type { AiCandidate } from "@/lib/ai";
 import { useAppConfig } from "@/lib/config";
 import { todayLocal } from "@/lib/dates";
 import type { LookupCandidate } from "@/lib/lookup";
 import type { FlightInput, FlightSource } from "@/lib/types";
+import { AiPanel } from "./AiPanel";
 import { FlightForm } from "./FlightForm";
 import { LookupPanel } from "./LookupPanel";
 
@@ -27,8 +30,41 @@ export function NewFlight() {
   const baseId = useId();
   const [tab, setTab] = useState<Tab>("manual");
   const [prefill, setPrefill] = useState<Prefill>({ initial: {}, source: "manual", seq: 0 });
+  // AI 解析出的多条航班：逐条预填、确认（保存或跳过）后自动进入下一条
+  const [queue, setQueue] = useState<{ items: AiCandidate[]; index: number } | null>(null);
+
+  function showAiItem(items: AiCandidate[], index: number) {
+    const c = items[index];
+    setQueue({ items, index });
+    setPrefill((p) => ({
+      seq: p.seq + 1,
+      source: "ai",
+      initial: {
+        flightDate: c.flightDate ?? undefined,
+        flightNumber: c.flightNumber ?? "",
+        depIata: c.depIata ?? "",
+        arrIata: c.arrIata ?? "",
+        aircraftType: c.aircraftType,
+        registration: c.registration,
+        notes: c.notes,
+      },
+      note: c.warnings.length > 0 ? `请特别核对：${c.warnings.join("；")}` : "已按 AI 解析结果预填，请核对后保存。",
+    }));
+    setTab("manual");
+  }
+
+  /** 当前这条处理完（保存或跳过）：还有下一条就预填下一条，否则回到航班列表。 */
+  function nextOrFinish() {
+    if (queue && queue.index + 1 < queue.items.length) {
+      showAiItem(queue.items, queue.index + 1);
+    } else {
+      setQueue(null);
+      router.push("/flights");
+    }
+  }
 
   function pickCandidate(c: LookupCandidate) {
+    setQueue(null);
     setPrefill((p) => ({
       seq: p.seq + 1,
       source: "api",
@@ -82,14 +118,26 @@ export function NewFlight() {
       <div id={`${baseId}-panel`} role="tabpanel" aria-labelledby={`${baseId}-tab-${tab}`} className="p-4 md:p-6">
         {tab === "manual" ? (
           <>
-            {prefill.note ? (
+            {queue ? (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-navy">
+                <p>
+                  <span className="font-semibold">
+                    AI 解析结果 第 {queue.index + 1} / {queue.items.length} 条
+                  </span>
+                  ：{prefill.note}
+                </p>
+                <Button variant="ghost" onClick={nextOrFinish}>
+                  跳过这条
+                </Button>
+              </div>
+            ) : prefill.note ? (
               <p className="mb-4 rounded-lg bg-primary/10 px-3 py-2 text-sm text-navy">{prefill.note}</p>
             ) : null}
             <FlightForm
               key={prefill.seq}
               initial={prefill.initial}
               source={prefill.source}
-              onSaved={() => router.push("/flights")}
+              onSaved={nextOrFinish}
               onCancel={() => router.back()}
             />
           </>
@@ -100,7 +148,7 @@ export function NewFlight() {
             <Unavailable text="没有配置 AeroDataBox API key，航班号查询不可用。请在项目根目录的 .env 里填写 AERODATABOX_API_KEY 后重启，或者手动填写。" />
           )
         ) : config.data?.aiEnabled ? (
-          <Unavailable text="AI 解析将在下一阶段加入。" />
+          <AiPanel onConfirm={(items) => showAiItem(items, 0)} />
         ) : (
           <Unavailable text="没有配置 Gemini API key，AI 解析不可用。请在 .env 里填写 GEMINI_API_KEY 后重启，或者手动填写。" />
         )}
