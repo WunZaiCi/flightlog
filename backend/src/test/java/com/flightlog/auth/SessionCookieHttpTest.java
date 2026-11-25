@@ -47,6 +47,27 @@ class SessionCookieHttpTest extends SqliteTestSupport {
         .containsIgnoringCase("Secure");
   }
 
+  @Test
+  void csrfCookieIsSecureOnlyWhenForwardedOverHttps() throws Exception {
+    String plain =
+        http.send(get("/api/health", null), ofString()).headers().allValues("Set-Cookie").stream()
+            .filter(c -> c.startsWith("XSRF-TOKEN="))
+            .findFirst()
+            .orElseThrow();
+    String tls =
+        http
+            .send(get("/api/health", "https"), ofString())
+            .headers()
+            .allValues("Set-Cookie")
+            .stream()
+            .filter(c -> c.startsWith("XSRF-TOKEN="))
+            .findFirst()
+            .orElseThrow();
+
+    assertThat(plain).doesNotContainIgnoringCase("Secure");
+    assertThat(tls).containsIgnoringCase("Secure");
+  }
+
   private String registerAndGetSessionCookie(String user, String forwardedProto) throws Exception {
     HttpResponse<String> health = http.send(get("/api/health", forwardedProto), ofString());
     String csrf = cookieValue(health.headers().allValues("Set-Cookie"), "XSRF-TOKEN").orElseThrow();

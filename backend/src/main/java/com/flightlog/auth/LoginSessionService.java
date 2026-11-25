@@ -3,6 +3,7 @@ package com.flightlog.auth;
 import com.flightlog.common.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,28 +19,37 @@ import org.springframework.stereotype.Service;
 public class LoginSessionService {
 
   private final AuthenticationManager authenticationManager;
+  private final LoginAttemptService loginAttempts;
   private final SecurityContextRepository securityContextRepository;
   private final SecurityContextHolderStrategy contextHolder =
       SecurityContextHolder.getContextHolderStrategy();
 
   public LoginSessionService(
       AuthenticationManager authenticationManager,
-      SecurityContextRepository securityContextRepository) {
+      SecurityContextRepository securityContextRepository,
+      LoginAttemptService loginAttempts) {
     this.authenticationManager = authenticationManager;
+    this.loginAttempts = loginAttempts;
     this.securityContextRepository = securityContextRepository;
   }
 
   /** 校验邮箱和密码。邮箱不存在和密码错误返回同样的提示，不暴露哪个邮箱注册过。 */
   public AppUserPrincipal login(
       String email, String password, HttpServletRequest request, HttpServletResponse response) {
+    String ip = request.getRemoteAddr();
+    if (loginAttempts.isLocked(ip)) {
+      throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "登录失败次数过多，请 15 分钟后再试");
+    }
     Authentication authentication;
     try {
       authentication =
           authenticationManager.authenticate(
               UsernamePasswordAuthenticationToken.unauthenticated(email, password));
     } catch (AuthenticationException ex) {
+      loginAttempts.recordFailure(ip);
       throw ApiException.unauthorized("邮箱或密码错误");
     }
+    loginAttempts.recordSuccess(ip);
     startSession(authentication, request, response);
     return (AppUserPrincipal) authentication.getPrincipal();
   }

@@ -28,9 +28,16 @@ public class SessionClient {
   private final MockMvcTester mvc;
   private final Map<String, String> cookies = new LinkedHashMap<>();
   private final Map<String, String> lastSetCookieHeaders = new LinkedHashMap<>();
+  private final Map<String, String> headers = new LinkedHashMap<>();
 
   public SessionClient(MockMvcTester mvc) {
     this.mvc = mvc;
+  }
+
+  /** 之后每个请求都带上这个请求头（例如模拟 X-Forwarded-For）。 */
+  public SessionClient withHeader(String name, String value) {
+    headers.put(name, value);
+    return this;
   }
 
   public MvcTestResult get(String uri) {
@@ -109,6 +116,7 @@ public class SessionClient {
   private MvcTestResult send(MockMvcRequestBuilder request, boolean withCsrf) {
     // MockMvc 里原始的 Cookie 请求头不会解析成 request.getCookies()，要用 cookie(...) 传
     cookies.forEach((name, value) -> request.cookie(new Cookie(name, value)));
+    headers.forEach(request::header);
     if (withCsrf && cookies.containsKey(CSRF_COOKIE)) {
       request.header("X-XSRF-TOKEN", cookies.get(CSRF_COOKIE));
     }
