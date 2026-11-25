@@ -85,7 +85,7 @@ export function MapPage() {
         aria-label="地图侧栏"
         className={`${
           drawerOpen
-            ? "fixed inset-x-0 bottom-0 z-30 block max-h-[70dvh] rounded-t-2xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl"
+            ? "fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 block max-h-[65dvh] rounded-t-2xl bg-white p-4 shadow-2xl"
             : "hidden"
         } overflow-y-auto md:static md:block md:max-h-none md:w-80 md:shrink-0 md:rounded-none md:bg-transparent md:p-0 md:shadow-none`}
       >
