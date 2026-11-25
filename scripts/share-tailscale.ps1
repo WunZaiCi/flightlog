@@ -2,14 +2,15 @@
 # 只在自己的 tailnet 内可见（tailscale serve），不使用 Funnel，不对公网开放。
 # 兼容 Windows PowerShell 5.1 和 PowerShell 7。
 
-$tailscale = Get-Command tailscale -ErrorAction SilentlyContinue
+. (Join-Path $PSScriptRoot "find-tailscale.ps1")
+$tailscale = Find-Tailscale
 if (-not $tailscale) {
     Write-Host "没有找到 tailscale 命令。请先安装 Tailscale：https://tailscale.com/download" -ForegroundColor Red
     exit 1
 }
 
 # 检查是否已登录：未登录时 tailscale status 返回非 0
-$null = cmd /c "tailscale status >nul 2>&1"
+$null = & $tailscale status 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Tailscale 还没有登录或没有运行。请先执行 tailscale up 并完成登录。" -ForegroundColor Red
     exit 1
@@ -29,7 +30,7 @@ if (-not $running) {
 }
 
 # 后台分享本机 8000 端口（HTTPS 证书由 Tailscale 自动签发）
-tailscale serve --bg 8000
+& $tailscale serve --bg 8000
 if ($LASTEXITCODE -ne 0) {
     Write-Host "tailscale serve 失败。可能需要在 Tailscale 管理后台为这个 tailnet 开启 HTTPS（MagicDNS + HTTPS Certificates）。" -ForegroundColor Red
     exit $LASTEXITCODE
@@ -38,7 +39,7 @@ if ($LASTEXITCODE -ne 0) {
 # 读出本机在 tailnet 里的域名，例如 my-pc.tail1234.ts.net
 $dnsName = $null
 try {
-    $status = (tailscale status --json) | Out-String | ConvertFrom-Json
+    $status = (& $tailscale status --json) | Out-String | ConvertFrom-Json
     $dnsName = $status.Self.DNSName.TrimEnd(".")
 } catch {
     $dnsName = $null
