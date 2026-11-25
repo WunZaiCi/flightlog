@@ -83,6 +83,29 @@ describe("NewFlight", () => {
     expect(screen.getByRole("combobox", { name: "机型" })).toHaveValue("");
   });
 
+  it("接口只返回系列时，机型框预填系列名并展开具体型号让用户选", async () => {
+    mockApi({
+      "GET /api/config": () => json(200, { aiEnabled: false, lookupEnabled: true }),
+      "GET /api/lookup/flight": () =>
+        json(200, { cached: false, candidates: [{ ...candidate, aircraftType: null, aircraftModel: "Boeing 777", aircraftSearch: "777" }] }),
+      "GET /api/ref/aircraft-types": () =>
+        json(200, [
+          { icaoCode: "B772", manufacturer: "Boeing", family: "777", model: "777-200", displayName: "Boeing 777-200", body: "wide" },
+          { icaoCode: "B77W", manufacturer: "Boeing", family: "777", model: "777-300ER", displayName: "Boeing 777-300ER", body: "wide" },
+        ]),
+    });
+    render(<NewFlight />, { wrapper });
+
+    await lookup();
+    await userEvent.click(await screen.findByRole("button", { name: "使用这条" }));
+
+    expect(screen.getByText(/只返回了系列「Boeing 777」/)).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "机型" })).toHaveValue("777");
+    const list = await screen.findByRole("listbox", { name: "机型" });
+    await userEvent.click(within(list).getByRole("option", { name: /777-300ER/ }));
+    expect(screen.getByRole("combobox", { name: "机型" })).toHaveValue("B77W");
+  });
+
   it("额度用完时显示中文提示", async () => {
     mockApi({
       "GET /api/config": () => json(200, { aiEnabled: false, lookupEnabled: true }),

@@ -164,3 +164,26 @@ describe("FlightForm", () => {
     expect(submit).toHaveBeenCalledWith(expect.objectContaining({ flightNumber: "NH241", depIata: "HND" }));
   });
 });
+
+describe("FlightForm 机型提示", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("输入完整子型号时提示从下拉框选择，选中后保存的是 ICAO 代码", async () => {
+    const api = mockApi({
+      "GET /api/ref/aircraft-types": () =>
+        json(200, [{ icaoCode: "A320", manufacturer: "Airbus", family: "A320", model: "A320", displayName: "Airbus A320", body: "narrow" }]),
+      "GET /api/ref/airports": () => json(200, []),
+      "POST /api/flights": () => json(201, { id: 1 }),
+    });
+    render(<FlightForm onSaved={vi.fn()} initial={{ flightNumber: "NH1", depIata: "HND", arrIata: "FUK" }} />, { wrapper });
+
+    const input = screen.getByRole("combobox", { name: "机型" });
+    await userEvent.type(input, "A320-212");
+    expect(screen.getByText("请从下拉框里选择具体机型")).toBeInTheDocument();
+    expect(screen.queryByText(/未识别机型/)).not.toBeInTheDocument();
+
+    await userEvent.click(await screen.findByRole("option", { name: /Airbus A320/ }));
+    await userEvent.click(screen.getByRole("button", { name: "保存" }));
+    expect(api.calls("POST", "/api/flights")[0]).toMatchObject({ aircraftType: "A320" });
+  });
+});

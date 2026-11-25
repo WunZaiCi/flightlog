@@ -20,10 +20,12 @@ type FlightFormProps = {
   onSaved: (flight: Saved) => void;
   onCancel?: () => void;
   source?: FlightSource;
+  /** 机型框预填的是系列名（例如 777）时，一开始就展开下拉框让用户选具体型号 */
+  openAircraftList?: boolean;
 };
 
 /** 新增和编辑航班共用的表单。AI 和 API 的结果也只是预填这个表单，用户确认后才保存。 */
-export function FlightForm({ initial, submit, onSaved, onCancel, source = "manual" }: FlightFormProps) {
+export function FlightForm({ initial, submit, onSaved, onCancel, source = "manual", openAircraftList = false }: FlightFormProps) {
   const create = useCreateFlight();
   const save = submit ?? create.mutateAsync;
 
@@ -46,8 +48,12 @@ export function FlightForm({ initial, submit, onSaved, onCancel, source = "manua
   const fieldErrors = error?.fieldErrors ?? {};
 
   const typeCode = aircraftType.trim().toUpperCase();
+  // 输入的是 ICAO 代码样式（2~4 位字母数字）但列表里没有：可以按「未识别机型」保存；
+  // 其他写法（例如 A320-212、777）要从下拉框里选具体机型
+  const looksLikeCode = /^[A-Z0-9]{2,4}$/.test(typeCode);
   const typeUnrecognized =
-    typeCode !== "" && !type && typeResults !== undefined && !typeResults.some((t) => t.icaoCode === typeCode);
+    looksLikeCode && !type && typeResults !== undefined && !typeResults.some((t) => t.icaoCode === typeCode);
+  const typeNeedsPick = typeCode !== "" && !looksLikeCode && !type;
 
   const onTypeResults = useCallback((results: AircraftType[] | undefined) => setTypeResults(results), []);
 
@@ -156,6 +162,7 @@ export function FlightForm({ initial, submit, onSaved, onCancel, source = "manua
 
         <Combobox<AircraftType>
           label="机型"
+          initiallyOpen={openAircraftList}
           placeholder="例如 B789 或 787-9（可选）"
           autoCapitalize="characters"
           value={aircraftType}
@@ -181,6 +188,8 @@ export function FlightForm({ initial, submit, onSaved, onCancel, source = "manua
           hint={
             type ? (
               type.displayName
+            ) : typeNeedsPick ? (
+              <span className="text-accent">请从下拉框里选择具体机型</span>
             ) : typeUnrecognized ? (
               <span className="text-accent">未识别机型：列表里没有 {typeCode}，仍然可以保存，统计页会提示</span>
             ) : undefined

@@ -121,6 +121,27 @@ class AiParseApiTest extends SqliteTestSupport {
   }
 
   @Test
+  void aircraftSubtypeFromModelIsConvertedOrFlagged() {
+    modelAnswers(
+        """
+        {"flights":[
+          {"flightNumber":"NH1","date":"2026-11-03","departureAirport":"HND","arrivalAirport":"FUK",
+           "aircraftType":"A320-212","registration":null,"notes":null},
+          {"flightNumber":"NH2","date":"2026-11-04","departureAirport":"FUK","arrivalAirport":"HND",
+           "aircraftType":"Boeing 777","registration":null,"notes":null}
+        ]}
+        """);
+    MvcTestResult result = parseText("x");
+    assertThat(result).bodyJson().extractingPath("$.flights[0].aircraftType").isEqualTo("A320");
+    assertThat(result).bodyJson().extractingPath("$.flights[1].aircraftType").isNull();
+    assertThat(result).bodyJson().extractingPath("$.flights[1].aircraftSearch").isEqualTo("777");
+    assertThat(result)
+        .bodyJson()
+        .extractingPath("$.flights[1].warnings")
+        .isEqualTo(java.util.List.of("机型「Boeing 777」只有系列，请选择具体型号"));
+  }
+
+  @Test
   void nothingFoundIsFriendly() {
     modelAnswers("{\"flights\":[]}");
     MvcTestResult result = parseText("今天天气不错");

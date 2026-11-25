@@ -31,6 +31,7 @@ public final class AiDtos {
   /**
    * 预填表单用的一条航班，用户确认后才保存。
    *
+   * @param aircraftSearch 机型只有系列（Boeing 777）时，用来搜索具体型号的词
    * @param warnings 需要用户特别核对的地方（例如没识别出日期、机场不在机场表里）
    */
   public record AiCandidate(
@@ -39,6 +40,7 @@ public final class AiDtos {
       String depIata,
       String arrIata,
       String aircraftType,
+      String aircraftSearch,
       String registration,
       String notes,
       List<String> warnings) {}

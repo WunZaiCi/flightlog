@@ -7,6 +7,8 @@ export type AiCandidate = {
   depIata: string | null;
   arrIata: string | null;
   aircraftType: string | null;
+  /** 机型只有系列（Boeing 777）时，用来搜索具体型号的词 */
+  aircraftSearch?: string | null;
   registration: string | null;
   notes: string | null;
   warnings: string[];

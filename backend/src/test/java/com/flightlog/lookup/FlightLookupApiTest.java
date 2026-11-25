@@ -87,6 +87,21 @@ class FlightLookupApiTest extends SqliteTestSupport {
   }
 
   @Test
+  void familyOnlyModelGivesSearchTextInsteadOfCode() {
+    stub("NH103", "2026-11-11", 200, NH242.replace("Boeing 787-9", "Boeing 777"));
+    MvcTestResult result = user().get("/api/lookup/flight?number=NH103&date=2026-11-11");
+    assertThat(result).bodyJson().extractingPath("$.candidates[0].aircraftType").isNull();
+    assertThat(result).bodyJson().extractingPath("$.candidates[0].aircraftSearch").isEqualTo("777");
+  }
+
+  @Test
+  void fullSubtypeModelIsConverted() {
+    stub("NH104", "2026-11-12", 200, NH242.replace("Boeing 787-9", "Airbus A320-214"));
+    MvcTestResult result = user().get("/api/lookup/flight?number=NH104&date=2026-11-12");
+    assertThat(result).bodyJson().extractingPath("$.candidates[0].aircraftType").isEqualTo("A320");
+  }
+
+  @Test
   void foundFlightPrefillsFields() {
     stub("NH242", "2026-11-03", 200, NH242);
 

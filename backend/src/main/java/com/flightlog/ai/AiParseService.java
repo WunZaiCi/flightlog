@@ -7,13 +7,16 @@ import com.flightlog.ai.AiDtos.ParsedItinerary;
 import com.flightlog.common.ApiException;
 import com.flightlog.common.GeminiProperties;
 import com.flightlog.flight.FlightNumbers;
+import com.flightlog.reference.AircraftTypeResolver;
 import com.flightlog.reference.ReferenceRepository;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -32,6 +35,8 @@ import org.springframework.util.MimeType;
 public class AiParseService {
 
   private static final Logger log = LoggerFactory.getLogger(AiParseService.class);
+
+  private static final Pattern ICAO_CODE = Pattern.compile("^[A-Z0-9]{2,4}$");
 
   static final Set<String> IMAGE_TYPES =
       Set.of("image/jpeg", "image/png", "image/webp", "image/heic", "image/heif");
@@ -59,11 +64,14 @@ public class AiParseService {
   private final GeminiProperties gemini;
   private final ObjectProvider<ChatClient.Builder> chatClientBuilder;
   private final ReferenceRepository reference;
+  private final AircraftTypeResolver resolver;
 
   public AiParseService(
       GeminiProperties gemini,
       ObjectProvider<ChatClient.Builder> chatClientBuilder,
-      ReferenceRepository reference) {
+      ReferenceRepository reference,
+      AircraftTypeResolver resolver) {
+    this.resolver = resolver;
     this.gemini = gemini;
     this.chatClientBuilder = chatClientBuilder;
     this.reference = reference;
@@ -150,13 +158,33 @@ public class AiParseService {
     String dep = airport(f.departureAirport(), "出发机场", warnings);
     String arr = airport(f.arrivalAirport(), "到达机场", warnings);
 
+    // 机型：能换算成机型表里的代码就换算（A320-212 → A320）；本身像 ICAO 代码的照常保留（可能是未识别机型）
+    String rawType = blankToNull(f.aircraftType());
+    String type = null;
+    String typeSearch = null;
+    if (rawType != null) {
+      Optional<String> resolved = resolver.resolve(rawType);
+      if (resolved.isPresent()) {
+        type = resolved.get();
+      } else if (ICAO_CODE.matcher(rawType.toUpperCase(Locale.ROOT)).matches()) {
+        type = rawType.toUpperCase(Locale.ROOT);
+      } else {
+        typeSearch = resolver.familySearch(rawType).orElse(null);
+        warnings.add(
+            typeSearch != null
+                ? "机型「" + rawType + "」只有系列，请选择具体型号"
+                : "机型「" + rawType + "」没能匹配到机型代码，请手动选择");
+      }
+    }
+
     String reg = blankToNull(f.registration());
     return new AiCandidate(
         number,
         date,
         dep,
         arr,
-        upper(f.aircraftType()),
+        type,
+        typeSearch,
         reg == null ? null : reg.replaceAll("\\s", "").toUpperCase(Locale.ROOT),
         blankToNull(f.notes()),
         warnings);

@@ -10,6 +10,8 @@ export type LookupCandidate = {
   arrName: string | null;
   aircraftType: string | null;
   aircraftModel: string | null;
+  /** 接口只给了系列（Boeing 777）时，用来搜索具体型号的词 */
+  aircraftSearch: string | null;
   registration: string | null;
   airlineName: string | null;
 };

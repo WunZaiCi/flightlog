@@ -93,4 +93,16 @@ class ReferenceApiTest extends SqliteTestSupport {
         .extractingPath("$.length()")
         .satisfies(n -> assertThat((Integer) n).isLessThanOrEqualTo(10));
   }
+
+  @Test
+  void aircraftTypeSearchUnderstandsFullSubtypeNames() {
+    assertThat(search("/api/ref/aircraft-types", "A320-212"))
+        .bodyJson()
+        .extractingPath("$[0].icaoCode")
+        .isEqualTo("A320");
+    assertThat(search("/api/ref/aircraft-types", "777-3ZG(ER)"))
+        .bodyJson()
+        .extractingPath("$[0].icaoCode")
+        .isEqualTo("B77W");
+  }
 }

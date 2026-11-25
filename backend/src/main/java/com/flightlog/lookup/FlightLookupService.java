@@ -4,7 +4,7 @@ import com.flightlog.common.ApiException;
 import com.flightlog.flight.FlightNumbers;
 import com.flightlog.lookup.AeroDataBoxClient.AeroDataBoxException;
 import com.flightlog.lookup.ApiCacheRepository.CachedResponse;
-import com.flightlog.reference.ReferenceRepository;
+import com.flightlog.reference.AircraftTypeResolver;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -23,7 +23,10 @@ import tools.jackson.databind.json.JsonMapper;
 @Service
 public class FlightLookupService {
 
-  /** 预填表单用的一条航班。aircraftType 是匹配到的 ICAO 机型代码，匹配不到时为空（aircraftModel 保留原文）。 */
+  /**
+   * 预填表单用的一条航班。aircraftType 是换算出的 ICAO 机型代码，换算不了时为空（aircraftModel 保留原文）； aircraftSearch
+   * 是只给了系列（Boeing 777）时用来搜索具体型号的词。
+   */
   public record LookupCandidate(
       String flightNumber,
       LocalDate flightDate,
@@ -33,6 +36,7 @@ public class FlightLookupService {
       String arrName,
       String aircraftType,
       String aircraftModel,
+      String aircraftSearch,
       String registration,
       String airlineName) {}
 
@@ -43,19 +47,19 @@ public class FlightLookupService {
   private final AeroDataBoxProperties properties;
   private final AeroDataBoxClient client;
   private final ApiCacheRepository cache;
-  private final ReferenceRepository reference;
+  private final AircraftTypeResolver resolver;
   private final JsonMapper jsonMapper;
 
   public FlightLookupService(
       AeroDataBoxProperties properties,
       AeroDataBoxClient client,
       ApiCacheRepository cache,
-      ReferenceRepository reference,
+      AircraftTypeResolver resolver,
       JsonMapper jsonMapper) {
     this.properties = properties;
     this.client = client;
     this.cache = cache;
-    this.reference = reference;
+    this.resolver = resolver;
     this.jsonMapper = jsonMapper;
   }
 
@@ -139,8 +143,9 @@ public class FlightLookupService {
               arr.toUpperCase(Locale.ROOT),
               text(f.path("departure").path("airport").path("name")),
               text(f.path("arrival").path("airport").path("name")),
-              model == null ? null : reference.findAircraftTypeIcaoByName(model).orElse(null),
+              model == null ? null : resolver.resolve(model).orElse(null),
               model,
+              model == null ? null : resolver.familySearch(model).orElse(null),
               reg == null ? null : reg.replaceAll("\\s", "").toUpperCase(Locale.ROOT),
               text(f.path("airline").path("name"))));
     }

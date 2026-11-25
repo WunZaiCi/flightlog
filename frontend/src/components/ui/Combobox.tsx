@@ -21,6 +21,8 @@ type ComboboxProps<T> = {
   error?: string;
   hint?: ReactNode;
   className?: string;
+  /** 一开始就展开下拉框（不抢焦点，手机上不会弹出键盘） */
+  initiallyOpen?: boolean;
 } & Pick<InputHTMLAttributes<HTMLInputElement>, "placeholder" | "inputMode" | "autoCapitalize" | "required" | "maxLength">;
 
 /**
@@ -40,11 +42,12 @@ export function Combobox<T>({
   error,
   hint,
   className,
+  initiallyOpen = false,
   ...inputProps
 }: ComboboxProps<T>) {
   const id = useId();
   const listId = `${id}-list`;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initiallyOpen);
   const [active, setActive] = useState(-1);
   const query = useDebounced(value.trim(), 200);
 

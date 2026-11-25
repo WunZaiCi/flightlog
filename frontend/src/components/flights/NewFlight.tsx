@@ -19,7 +19,14 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "ai", label: "AI 解析" },
 ];
 
-type Prefill = { initial: Partial<FlightInput>; source: FlightSource; note?: string; seq: number };
+type Prefill = {
+  initial: Partial<FlightInput>;
+  source: FlightSource;
+  note?: string;
+  seq: number;
+  /** 机型框预填的是系列名，需要展开下拉框让用户选具体型号 */
+  openAircraftList?: boolean;
+};
 
 /**
  * 录入航班：手动填写、航班号查询、AI 解析三种方式。查询和解析的结果都只预填同一个表单，用户确认后才保存。
@@ -44,10 +51,11 @@ export function NewFlight() {
         flightNumber: c.flightNumber ?? "",
         depIata: c.depIata ?? "",
         arrIata: c.arrIata ?? "",
-        aircraftType: c.aircraftType,
+        aircraftType: c.aircraftType ?? c.aircraftSearch,
         registration: c.registration,
         notes: c.notes,
       },
+      openAircraftList: !c.aircraftType && !!c.aircraftSearch,
       note: c.warnings.length > 0 ? `请特别核对：${c.warnings.join("；")}` : "已按 AI 解析结果预填，请核对后保存。",
     }));
     setTab("manual");
@@ -73,13 +81,16 @@ export function NewFlight() {
         flightNumber: c.flightNumber,
         depIata: c.depIata,
         arrIata: c.arrIata,
-        aircraftType: c.aircraftType,
+        aircraftType: c.aircraftType ?? c.aircraftSearch,
         registration: c.registration,
       },
+      openAircraftList: !c.aircraftType && !!c.aircraftSearch,
       note:
-        !c.aircraftType && c.aircraftModel
-          ? `接口返回的机型「${c.aircraftModel}」没能匹配到机型代码，请在「机型」里手动选择。`
-          : "已按查询结果预填，请核对后保存。",
+        !c.aircraftType && c.aircraftSearch
+          ? `接口只返回了系列「${c.aircraftModel}」，请在「机型」下拉框里选择具体型号。`
+          : !c.aircraftType && c.aircraftModel
+            ? `接口返回的机型「${c.aircraftModel}」没能匹配到机型代码，请在「机型」里手动选择。`
+            : "已按查询结果预填，请核对后保存。",
     }));
     setTab("manual");
   }
@@ -137,6 +148,7 @@ export function NewFlight() {
               key={prefill.seq}
               initial={prefill.initial}
               source={prefill.source}
+              openAircraftList={prefill.openAircraftList}
               onSaved={nextOrFinish}
               onCancel={() => router.back()}
             />
