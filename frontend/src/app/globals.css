@@ -39,3 +39,15 @@
     @apply bg-white font-sans text-slate-900 antialiased;
   }
 }
+
+/* 地图控件：手机上点击区域不小于 44px（加 html 提高优先级，maplibre-gl.css 在后面加载） */
+@media (max-width: 767px) {
+  html .maplibregl-ctrl-group button {
+    width: 44px;
+    height: 44px;
+  }
+  html .maplibregl-ctrl-attrib-button {
+    width: 44px;
+    height: 44px;
+  }
+}

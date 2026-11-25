@@ -43,3 +43,36 @@ test("航线地图：在线底图不可用时切换到离线底图，统计和�
 
   expect(errors).toEqual([]);
 });
+
+test("航线地图：在线底图加载好后保持在线，筛选会更新地图上的航线", async ({ page, isMobile }) => {
+  // 用一个最小的合法样式代替 OpenFreeMap（不依赖外部服务），其他请求一律失败
+  await page.route("https://tiles.openfreemap.org/**", (route) =>
+    route.request().url().endsWith("/styles/positron")
+      ? route.fulfill({
+          contentType: "application/json",
+          body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#eeeeee" } }] }),
+        })
+      : route.abort(),
+  );
+
+  await signUp(page);
+  await createFlight(page, { flightDate: "2025-03-01", flightNumber: "NH241", depIata: "HND", arrIata: "FUK" });
+  await createFlight(page, { flightDate: "2026-01-10", flightNumber: "UA837", depIata: "SFO", arrIata: "NRT" });
+
+  await page.goto("/map");
+  const map = page.getByTestId("route-map");
+  await expect.poll(() => map.getAttribute("data-features")).toBe("2");
+
+  // 超过 8 秒的切换时限后仍然是在线底图
+  await page.waitForTimeout(9_000);
+  await expect(map).toHaveAttribute("data-basemap", "online");
+
+  if (isMobile) {
+    const zoomIn = page.getByRole("button", { name: "Zoom in" });
+    const box = await zoomIn.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await page.getByRole("button", { name: "筛选和统计" }).click();
+  }
+  await page.getByLabel("年份").selectOption("2026");
+  await expect.poll(() => map.getAttribute("data-features")).toBe("1");
+});

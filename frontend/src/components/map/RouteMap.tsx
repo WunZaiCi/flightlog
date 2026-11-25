@@ -80,25 +80,32 @@ export function RouteMap(props: RouteMapProps) {
     instance.addControl(new NavigationControl({ showCompass: false }), "top-left");
     map.current = instance;
 
+    // 注意：isStyleLoaded() 在瓦片还在加载时也是 false，不能用来判断「样式是否加载好」，
+    // 所以自己记录是否收到过 style.load。
+    let styleReady = false;
     let switched = false;
+    let fitted = false;
     const switchToOffline = () => {
       if (switched) return;
       switched = true;
+      styleReady = false;
       setOffline(true);
       instance.setStyle(offlineStyle());
     };
     const timer = setTimeout(() => {
-      if (!instance.isStyleLoaded()) switchToOffline();
+      if (!styleReady) switchToOffline();
     }, STYLE_TIMEOUT_MS);
     instance.on("error", () => {
-      // 样式还没加载好时出错（例如断网），就改用离线底图；之后个别瓦片加载失败不处理
-      if (!instance.isStyleLoaded()) switchToOffline();
+      // 只在在线样式本身加载失败（例如断网）时切换；样式加载好之后个别瓦片失败不处理
+      if (!styleReady) switchToOffline();
     });
 
-    // 每次（重新）加载样式后都要重新加上航线和机场图层
+    // 每次（重新）加载样式后都要重新加上航线和机场图层；视野只在第一次调整，不打断用户的拖动和缩放
     instance.on("style.load", () => {
+      styleReady = true;
       addOverlay(instance);
-      updateData(instance, latest.current, true);
+      updateData(instance, latest.current, !fitted);
+      fitted = true;
     });
 
     // 记录已经由 worker 解析好的航线数量（e2e 用来确认航线真的画出来了）
@@ -133,7 +140,8 @@ export function RouteMap(props: RouteMapProps) {
   // 数据或选中项变化时更新图层
   const { routes, airports, selectedRoute, selectedAirport } = props;
   useEffect(() => {
-    if (map.current?.isStyleLoaded()) updateData(map.current, latest.current, false);
+    // 图层还没加上时 updateData 会直接返回，style.load 时会用最新数据补上
+    if (map.current) updateData(map.current, latest.current, false);
   }, [routes, airports, selectedRoute, selectedAirport]);
 
   // 数据变化时把视野调整到所有机场
