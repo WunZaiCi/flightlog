@@ -186,4 +186,24 @@ describe("FlightForm 机型提示", () => {
     await userEvent.click(screen.getByRole("button", { name: "保存" }));
     expect(api.calls("POST", "/api/flights")[0]).toMatchObject({ aircraftType: "A320" });
   });
+
+  it("只填了系列名（777）时不能直接保存，要先选具体型号", async () => {
+    const api = mockApi({
+      "GET /api/ref/aircraft-types": () =>
+        json(200, [
+          { icaoCode: "B772", manufacturer: "Boeing", family: "777", model: "777-200", displayName: "Boeing 777-200", body: "wide" },
+          { icaoCode: "B77W", manufacturer: "Boeing", family: "777", model: "777-300ER", displayName: "Boeing 777-300ER", body: "wide" },
+        ]),
+      "POST /api/flights": () => json(201, { id: 1 }),
+    });
+    render(<FlightForm onSaved={vi.fn()} initial={{ flightNumber: "NH1", depIata: "HND", arrIata: "FUK" }} />, { wrapper });
+
+    await userEvent.type(screen.getByRole("combobox", { name: "机型" }), "777");
+    expect(await screen.findByText("请从下拉框里选择具体机型")).toBeInTheDocument();
+    expect(screen.queryByText(/未识别机型/)).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "保存" }));
+    expect(api.calls("POST", "/api/flights")).toHaveLength(0);
+    expect(screen.getByRole("combobox", { name: "机型" })).toHaveAttribute("aria-invalid", "true");
+  });
 });

@@ -48,16 +48,29 @@ export function FlightForm({ initial, submit, onSaved, onCancel, source = "manua
   const fieldErrors = error?.fieldErrors ?? {};
 
   const typeCode = aircraftType.trim().toUpperCase();
-  // 输入的是 ICAO 代码样式（2~4 位字母数字）但列表里没有：可以按「未识别机型」保存；
-  // 其他写法（例如 A320-212、777）要从下拉框里选具体机型
+  // 三种情况：
+  // - 输入的是机型系列（777、A350，搜索结果里有这个系列）或其他非代码写法（A320-212）：要从下拉框选具体机型
+  // - 输入的是 ICAO 代码样式但列表里没有：可以按「未识别机型」保存
+  // - 其他：正常
   const looksLikeCode = /^[A-Z0-9]{2,4}$/.test(typeCode);
+  const isFamily =
+    typeResults?.some((t) => t.family.toUpperCase().replace(/\s/g, "") === typeCode && t.icaoCode !== typeCode) ?? false;
+  const typeNeedsPick = typeCode !== "" && !type && (!looksLikeCode || isFamily);
   const typeUnrecognized =
-    looksLikeCode && !type && typeResults !== undefined && !typeResults.some((t) => t.icaoCode === typeCode);
-  const typeNeedsPick = typeCode !== "" && !looksLikeCode && !type;
+    looksLikeCode && !isFamily && !type && typeResults !== undefined && !typeResults.some((t) => t.icaoCode === typeCode);
 
-  const onTypeResults = useCallback((results: AircraftType[] | undefined) => setTypeResults(results), []);
+  // 下拉框关闭（例如点保存时失去焦点）后保留最近一次的搜索结果，直到输入改变
+  const onTypeResults = useCallback((results: AircraftType[] | undefined) => {
+    if (results !== undefined) setTypeResults(results);
+  }, []);
 
   async function send(allowDuplicate: boolean) {
+    if (typeNeedsPick) {
+      // 不把「777」「A320-212」这种写法当成机型代码保存
+      const message = "请从下拉框里选择具体机型";
+      setError(new ApiError(400, message, { aircraftType: message }));
+      return;
+    }
     setPending(true);
     setError(null);
     try {
@@ -169,6 +182,7 @@ export function FlightForm({ initial, submit, onSaved, onCancel, source = "manua
           onChange={(v) => {
             setAircraftType(v);
             setType(undefined);
+            setTypeResults(undefined);
           }}
           onSelect={(t) => {
             setAircraftType(t.icaoCode);

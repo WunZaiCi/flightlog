@@ -87,7 +87,15 @@ class AircraftTypeResolverTest {
     "Boeing 737-8, B38M",
     "737-9, B39M",
     "737 MAX 8, B38M",
-    "777-9, B779"
+    "777-9, B779",
+    // 中文行程单和截图里常见的写法
+    "B787-9, B789",
+    "波音787-9, B789",
+    "波音 777-300ER, B77W",
+    "空客A320, A320",
+    "空中客车 A350-900, A359",
+    "A320–212, A320",
+    "A321－271NX, A21N"
   })
   void resolvesToIcao(String text, String expected) {
     assertThat(resolve(text)).isEqualTo(expected);
@@ -97,6 +105,21 @@ class AircraftTypeResolverTest {
   @ValueSource(strings = {"Boeing 777", "777", "Airbus A350", "Comac C939", "", "B999"})
   void ambiguousOrUnknownIsEmpty(String text) {
     assertThat(resolve(text)).isNull();
+  }
+
+  @Test
+  void resolveOrFamilyPrefersCodeThenFamily() {
+    assertThat(AircraftTypeResolver.resolveOrFamily("A320-212", TYPES))
+        .isEqualTo(new AircraftTypeResolver.Resolution("A320", null));
+    for (String family : List.of("777", "B777", "Boeing 777", "波音777")) {
+      assertThat(AircraftTypeResolver.resolveOrFamily(family, TYPES))
+          .as(family)
+          .isEqualTo(new AircraftTypeResolver.Resolution(null, "777"));
+    }
+    assertThat(AircraftTypeResolver.resolveOrFamily("B787", TYPES).search()).isEqualTo("787");
+    assertThat(AircraftTypeResolver.resolveOrFamily("A350", TYPES).search()).isEqualTo("A350");
+    assertThat(AircraftTypeResolver.resolveOrFamily("X9Z", TYPES))
+        .isEqualTo(new AircraftTypeResolver.Resolution(null, null));
   }
 
   @Test

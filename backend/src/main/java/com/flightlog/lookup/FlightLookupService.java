@@ -134,6 +134,10 @@ public class FlightLookupService {
         continue; // 代码共享航班等重复的航段
       }
       String model = text(f.path("aircraft").path("model"));
+      AircraftTypeResolver.Resolution type =
+          model == null
+              ? new AircraftTypeResolver.Resolution(null, null)
+              : resolver.resolveOrFamily(model);
       String reg = text(f.path("aircraft").path("reg"));
       result.add(
           new LookupCandidate(
@@ -143,9 +147,9 @@ public class FlightLookupService {
               arr.toUpperCase(Locale.ROOT),
               text(f.path("departure").path("airport").path("name")),
               text(f.path("arrival").path("airport").path("name")),
-              model == null ? null : resolver.resolve(model).orElse(null),
+              type.code(),
               model,
-              model == null ? null : resolver.familySearch(model).orElse(null),
+              type.search(),
               reg == null ? null : reg.replaceAll("\\s", "").toUpperCase(Locale.ROOT),
               text(f.path("airline").path("name"))));
     }

@@ -72,9 +72,40 @@ public class AircraftTypeResolver {
         return Optional.of(t.icaoCode());
       }
     }
-    String compact = upper.replaceAll("^(AIRBUS|BOEING)\\s*", "").replaceAll("\\s", "");
+    // 去掉前缀、统一破折号后再按型号匹配（B787-9、波音787-9、A320–212）
+    String compact = simplify(text);
+    String simplified = normalize(compact);
+    for (AircraftTypeResponse t : types) {
+      if (simplified.equals(normalize(t.model()))) {
+        return Optional.of(t.icaoCode());
+      }
+    }
     return subtypeCode(compact)
         .filter(code -> types.stream().anyMatch(t -> t.icaoCode().equals(code)));
+  }
+
+  /** 换算结果：能换算成代码就是 code；只有系列（777、Boeing 777）时 search 是用来选具体型号的搜索词。 */
+  public record Resolution(String code, String search) {}
+
+  public Resolution resolveOrFamily(String text) {
+    return resolveOrFamily(text, types());
+  }
+
+  /** 先尝试换算成代码，换算不了再看是不是只有系列。AI 解析和航班号查询都用这个，判断顺序一致。 */
+  static Resolution resolveOrFamily(String text, List<AircraftTypeResponse> types) {
+    Optional<String> code = resolve(text, types);
+    if (code.isPresent()) {
+      return new Resolution(code.get(), null);
+    }
+    return new Resolution(null, familySearch(text, types).orElse(null));
+  }
+
+  /** 去掉制造商前缀（Airbus、Boeing、空中客车、空客、波音）和 7x7 前面的 B（B787-9 → 787-9）， 把各种破折号统一成 -，去掉空格，转大写。 */
+  static String simplify(String text) {
+    String s = text.strip().toUpperCase(Locale.ROOT).replaceAll("[‐-―－−]", "-");
+    s = s.replaceAll("^(AIRBUS|BOEING|空中客车|空客|波音)\\s*", "");
+    s = s.replaceAll("^B(?=7\\d7)", "");
+    return s.replaceAll("\\s", "");
   }
 
   /** 只写了系列、对应多个具体型号时（Boeing 777），返回用来搜索的系列名（777）。 */
@@ -83,7 +114,7 @@ public class AircraftTypeResolver {
       return Optional.empty();
     }
     String wanted = normalize(text);
-    String withoutMaker = normalize(text.replaceAll("(?i)^\\s*(airbus|boeing)\\s*", ""));
+    String withoutMaker = normalize(simplify(text));
     List<AircraftTypeResponse> matches =
         types.stream()
             .filter(t ->

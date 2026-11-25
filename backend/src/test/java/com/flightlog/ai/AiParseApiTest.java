@@ -142,6 +142,27 @@ class AiParseApiTest extends SqliteTestSupport {
   }
 
   @Test
+  void bareFamilyCodesAreNotSavedAsUnrecognizedTypes() {
+    modelAnswers(
+        """
+        {"flights":[
+          {"flightNumber":"NH1","date":"2026-11-03","departureAirport":"HND","arrivalAirport":"FUK",
+           "aircraftType":"777","registration":null,"notes":null},
+          {"flightNumber":"NH2","date":"2026-11-04","departureAirport":"FUK","arrivalAirport":"HND",
+           "aircraftType":"B787","registration":null,"notes":null},
+          {"flightNumber":"NH3","date":"2026-11-05","departureAirport":"HND","arrivalAirport":"KIX",
+           "aircraftType":"X9Z","registration":null,"notes":null}
+        ]}
+        """);
+    MvcTestResult result = parseText("x");
+    assertThat(result).bodyJson().extractingPath("$.flights[0].aircraftType").isNull();
+    assertThat(result).bodyJson().extractingPath("$.flights[0].aircraftSearch").isEqualTo("777");
+    assertThat(result).bodyJson().extractingPath("$.flights[1].aircraftSearch").isEqualTo("787");
+    // 真正不认识的代码照常保留，作为未识别机型
+    assertThat(result).bodyJson().extractingPath("$.flights[2].aircraftType").isEqualTo("X9Z");
+  }
+
+  @Test
   void nothingFoundIsFriendly() {
     modelAnswers("{\"flights\":[]}");
     MvcTestResult result = parseText("今天天气不错");

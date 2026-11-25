@@ -14,7 +14,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -158,22 +157,22 @@ public class AiParseService {
     String dep = airport(f.departureAirport(), "出发机场", warnings);
     String arr = airport(f.arrivalAirport(), "到达机场", warnings);
 
-    // 机型：能换算成机型表里的代码就换算（A320-212 → A320）；本身像 ICAO 代码的照常保留（可能是未识别机型）
+    // 机型，按顺序：能换算成代码就换算（A320-212 → A320）；只有系列（777、B787）给出搜索词让用户选；
+    // 剩下本身像 ICAO 代码的照常保留（未识别机型），其他写法提示手动选择
     String rawType = blankToNull(f.aircraftType());
     String type = null;
     String typeSearch = null;
     if (rawType != null) {
-      Optional<String> resolved = resolver.resolve(rawType);
-      if (resolved.isPresent()) {
-        type = resolved.get();
+      AircraftTypeResolver.Resolution resolution = resolver.resolveOrFamily(rawType);
+      if (resolution.code() != null) {
+        type = resolution.code();
+      } else if (resolution.search() != null) {
+        typeSearch = resolution.search();
+        warnings.add("机型「" + rawType + "」只有系列，请选择具体型号");
       } else if (ICAO_CODE.matcher(rawType.toUpperCase(Locale.ROOT)).matches()) {
         type = rawType.toUpperCase(Locale.ROOT);
       } else {
-        typeSearch = resolver.familySearch(rawType).orElse(null);
-        warnings.add(
-            typeSearch != null
-                ? "机型「" + rawType + "」只有系列，请选择具体型号"
-                : "机型「" + rawType + "」没能匹配到机型代码，请手动选择");
+        warnings.add("机型「" + rawType + "」没能匹配到机型代码，请手动选择");
       }
     }
 

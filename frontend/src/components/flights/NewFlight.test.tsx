@@ -102,6 +102,9 @@ describe("NewFlight", () => {
     expect(screen.getByText(/只返回了系列「Boeing 777」/)).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "机型" })).toHaveValue("777");
     const list = await screen.findByRole("listbox", { name: "机型" });
+    // 只提示选择具体型号，不会同时说「未识别机型、仍可保存」
+    expect(screen.getByText("请从下拉框里选择具体机型")).toBeInTheDocument();
+    expect(screen.queryByText(/未识别机型/)).not.toBeInTheDocument();
     await userEvent.click(within(list).getByRole("option", { name: /777-300ER/ }));
     expect(screen.getByRole("combobox", { name: "机型" })).toHaveValue("B77W");
   });
