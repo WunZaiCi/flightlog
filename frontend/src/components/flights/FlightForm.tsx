@@ -53,8 +53,10 @@ export function FlightForm({ initial, submit, onSaved, onCancel, source = "manua
   // - 输入的是 ICAO 代码样式但列表里没有：可以按「未识别机型」保存
   // - 其他：正常
   const looksLikeCode = /^[A-Z0-9]{2,4}$/.test(typeCode);
+  // A320 既是代码又是系列名：结果里有完全相同的代码时，按代码处理
+  const exactCode = typeResults?.some((t) => t.icaoCode === typeCode) ?? false;
   const isFamily =
-    typeResults?.some((t) => t.family.toUpperCase().replace(/\s/g, "") === typeCode && t.icaoCode !== typeCode) ?? false;
+    !exactCode && (typeResults?.some((t) => t.family.toUpperCase().replace(/\s/g, "") === typeCode) ?? false);
   const typeNeedsPick = typeCode !== "" && !type && (!looksLikeCode || isFamily);
   const typeUnrecognized =
     looksLikeCode && !isFamily && !type && typeResults !== undefined && !typeResults.some((t) => t.icaoCode === typeCode);

@@ -206,4 +206,23 @@ describe("FlightForm 机型提示", () => {
     expect(api.calls("POST", "/api/flights")).toHaveLength(0);
     expect(screen.getByRole("combobox", { name: "机型" })).toHaveAttribute("aria-invalid", "true");
   });
+
+  it("A320 既是代码又是系列名：按代码直接保存，不拦下", async () => {
+    const api = mockApi({
+      "GET /api/ref/aircraft-types": () =>
+        json(200, [
+          { icaoCode: "A318", manufacturer: "Airbus", family: "A320", model: "A318", displayName: "Airbus A318", body: "narrow" },
+          { icaoCode: "A320", manufacturer: "Airbus", family: "A320", model: "A320", displayName: "Airbus A320", body: "narrow" },
+        ]),
+      "POST /api/flights": () => json(201, { id: 1 }),
+    });
+    render(<FlightForm onSaved={vi.fn()} initial={{ flightNumber: "NH1", depIata: "HND", arrIata: "FUK" }} />, { wrapper });
+
+    await userEvent.type(screen.getByRole("combobox", { name: "机型" }), "A320");
+    await screen.findByRole("option", { name: /Airbus A318/ });
+    expect(screen.queryByText("请从下拉框里选择具体机型")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "保存" }));
+    expect(api.calls("POST", "/api/flights")[0]).toMatchObject({ aircraftType: "A320" });
+  });
 });
