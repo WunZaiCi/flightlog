@@ -117,7 +117,7 @@ GET    /api/config     → { aiEnabled, lookupEnabled }
 - [x] 登机牌和电子客票截图识别
 
 ### P8 手机远程访问
-- [ ] `share-tailscale.ps1` / `unshare-tailscale.ps1` 脚本
+- [x] `share-tailscale.ps1` / `unshare-tailscale.ps1` 脚本
 - [ ] HTTPS 下 Cookie 加 Secure、登录频率限制
 - [ ] 所有页面在手机宽度下检查一遍（底部标签栏、表单、地图）
 - [ ] PWA：加 manifest 和图标，可以“添加到主屏幕”
