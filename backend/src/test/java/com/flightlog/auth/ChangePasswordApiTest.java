@@ -119,6 +119,34 @@ class ChangePasswordApiTest extends SqliteTestSupport {
   }
 
   @Test
+  void currentDeviceGetsANewSessionIdAndTheOldOneStopsWorking() {
+    SessionClient user = from("10.1.6.1");
+    user.register(uniqueEmail(), PASSWORD, null);
+    String before = user.cookie(SessionClient.SESSION_COOKIE);
+
+    assertThat(user.postJson("/api/auth/password", body(PASSWORD, NEW_PASSWORD)))
+        .hasStatus(HttpStatus.NO_CONTENT);
+    String after = user.cookie(SessionClient.SESSION_COOKIE);
+    assertThat(after).isNotBlank().isNotEqualTo(before);
+
+    SessionClient stolen = from("10.1.6.2");
+    stolen.setCookie(SessionClient.SESSION_COOKIE, before);
+    assertThat(stolen.get("/api/auth/me")).hasStatus(HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void otherUsersStayLoggedIn() {
+    SessionClient alice = from("10.1.7.1");
+    alice.register(uniqueEmail(), PASSWORD, null);
+    SessionClient bob = from("10.1.7.2");
+    bob.register(uniqueEmail(), PASSWORD, null);
+
+    assertThat(alice.postJson("/api/auth/password", body(PASSWORD, NEW_PASSWORD)))
+        .hasStatus(HttpStatus.NO_CONTENT);
+    assertThat(bob.get("/api/auth/me")).hasStatusOk();
+  }
+
+  @Test
   void requiresLoginAndCsrf() {
     SessionClient anonymous = from("10.1.5.1").primeCsrf();
     assertThat(anonymous.postJson("/api/auth/password", body(PASSWORD, NEW_PASSWORD)))

@@ -1,5 +1,6 @@
 package com.flightlog.auth;
 
+import com.flightlog.auth.AuthDtos.ChangePasswordRequest;
 import com.flightlog.common.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +26,7 @@ public class LoginSessionService {
   private final LoginAttemptService loginAttempts;
   private final SecurityContextRepository securityContextRepository;
   private final FindByIndexNameSessionRepository<? extends Session> sessions;
+  private final AuthService authService;
   private final SecurityContextHolderStrategy contextHolder =
       SecurityContextHolder.getContextHolderStrategy();
 
@@ -32,8 +34,10 @@ public class LoginSessionService {
       AuthenticationManager authenticationManager,
       SecurityContextRepository securityContextRepository,
       LoginAttemptService loginAttempts,
-      FindByIndexNameSessionRepository<? extends Session> sessions) {
+      FindByIndexNameSessionRepository<? extends Session> sessions,
+      AuthService authService) {
     this.authenticationManager = authenticationManager;
+    this.authService = authService;
     this.sessions = sessions;
     this.loginAttempts = loginAttempts;
     this.securityContextRepository = securityContextRepository;
@@ -71,11 +75,23 @@ public class LoginSessionService {
   }
 
   /**
-   * 改密码后：当前设备换一个新的会话 ID 并保持登录，同一用户在其他设备上的会话全部删除。
+   * 修改密码并让其他设备上的登录失效。顺序是：校验 → 删其他会话 → 写新密码。
+   *
+   * <p>不能放进同一个事务：Spring Session 用自己的事务（另一个连接）删会话，SQLite 只允许一个写入，会互相等待。
+   * 按这个顺序，写密码失败时只是其他设备需要重新登录，不会出现「密码改了但其他设备还登录着」。
+   */
+  public void changePassword(long userId, ChangePasswordRequest body, HttpServletRequest request) {
+    UserAccount user = authService.checkPasswordChange(userId, body, request.getRemoteAddr());
+    logoutOtherSessions(user.email(), request);
+    authService.savePassword(userId, body.newPassword());
+  }
+
+  /**
+   * 当前设备换一个新的会话 ID 并保持登录，同一用户在其他设备上的会话全部删除。
    *
    * <p>Spring Session JDBC 按登录名（邮箱）索引会话，所以可以按用户查出所有会话。
    */
-  public void logoutOtherSessions(String email, HttpServletRequest request) {
+  private void logoutOtherSessions(String email, HttpServletRequest request) {
     HttpSession current = request.getSession(false);
     String currentId = current == null ? null : current.getId();
     for (String id : sessions.findByPrincipalName(email).keySet()) {

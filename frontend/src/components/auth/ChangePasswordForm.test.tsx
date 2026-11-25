@@ -49,6 +49,10 @@ describe("修改密码表单", () => {
     });
     expect(screen.getByLabelText("当前密码")).toHaveValue("");
     expect(screen.getByLabelText("新密码")).toHaveValue("");
+
+    // 重新输入时成功提示消失
+    await userEvent.type(screen.getByLabelText("当前密码"), "x");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("当前密码错误时显示在对应输入框下", async () => {
@@ -80,5 +84,8 @@ describe("修改密码表单", () => {
 
     expect(await screen.findByText("两次输入的新密码不一致")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
+
+    await userEvent.clear(screen.getByLabelText("确认新密码"));
+    expect(screen.queryByText("两次输入的新密码不一致")).not.toBeInTheDocument();
   });
 });

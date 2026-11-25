@@ -18,6 +18,13 @@ export function ChangePasswordForm() {
   const fieldErrors = error?.fieldErrors ?? {};
   const generalError = error && Object.keys(fieldErrors).length === 0 ? error.message : null;
 
+  /** 用户重新输入时，清掉上一次的成功提示和「不一致」提示。服务器返回的字段错误留到下次提交。 */
+  function edited(update: () => void) {
+    update();
+    setConfirmError(undefined);
+    if (change.isSuccess) change.reset();
+  }
+
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (newPassword !== confirm) {
@@ -60,7 +67,7 @@ export function ChangePasswordForm() {
           required
           maxLength={64}
           value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          onChange={(e) => edited(() => setCurrentPassword(e.target.value))}
           error={fieldErrors.currentPassword}
         />
         <Field
@@ -71,7 +78,7 @@ export function ChangePasswordForm() {
           minLength={8}
           maxLength={64}
           value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={(e) => edited(() => setNewPassword(e.target.value))}
           error={fieldErrors.newPassword}
           hint="8 到 64 个字符"
         />
@@ -81,7 +88,7 @@ export function ChangePasswordForm() {
           autoComplete="new-password"
           required
           value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
+          onChange={(e) => edited(() => setConfirm(e.target.value))}
           error={confirmError}
         />
         <Button type="submit" variant="submit" className="w-full sm:w-auto" loading={change.isPending}>

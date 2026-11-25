@@ -56,8 +56,7 @@ public class AuthController {
       @AuthenticationPrincipal AppUserPrincipal principal,
       @Valid @RequestBody ChangePasswordRequest body,
       HttpServletRequest request) {
-    UserAccount user = authService.changePassword(principal.id(), body, request.getRemoteAddr());
-    loginSessionService.logoutOtherSessions(user.email(), request);
+    loginSessionService.changePassword(principal.id(), body, request);
   }
 
   @GetMapping("/me")

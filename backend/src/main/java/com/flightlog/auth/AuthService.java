@@ -57,8 +57,8 @@ public class AuthService {
     return users.findById(userId).orElseThrow(() -> ApiException.unauthorized("请先登录"));
   }
 
-  /** 验证当前密码后换成新密码。当前密码输错和登录失败一起计数（同一 IP 连续 5 次锁定 15 分钟）， 防止有人拿到已登录的设备后猜密码。 */
-  public UserAccount changePassword(long userId, ChangePasswordRequest request, String ip) {
+  /** 改密码前的校验：当前密码、新密码规则。当前密码输错和登录失败一起计数（同一 IP 连续 5 次锁定 15 分钟）， 防止有人拿到已登录的设备后猜密码。 */
+  public UserAccount checkPasswordChange(long userId, ChangePasswordRequest request, String ip) {
     if (loginAttempts.isLocked(ip)) {
       throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "密码输错次数过多，请 15 分钟后再试");
     }
@@ -74,8 +74,12 @@ public class AuthService {
     if (tooLongForBcrypt(request.newPassword())) {
       throw ApiException.invalidField("newPassword", TOO_LONG);
     }
-    users.updatePasswordHash(userId, passwordEncoder.encode(request.newPassword()));
     return user;
+  }
+
+  /** 保存新密码（先用 {@link #checkPasswordChange} 校验）。 */
+  public void savePassword(long userId, String newPassword) {
+    users.updatePasswordHash(userId, passwordEncoder.encode(newPassword));
   }
 
   private static boolean tooLongForBcrypt(String password) {
